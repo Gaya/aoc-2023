@@ -6,20 +6,9 @@ export function findMarkerIndex(input: string, length = 4): number {
   const start = length - 1;
 
   for (let i = start; i < input.length; i++) {
-    const t: { [l: string]: boolean } = {};
-    let duplicate = false;
-    const marker = input.substring(i - start, i + 1).split('');
+    const marker = new Set(input.substring(i - start, i + 1).split(''));
 
-    for (const l of marker) {
-      if (t[l]) {
-        duplicate = true;
-        continue;
-      }
-
-      t[l] = true;
-    }
-
-    if (!duplicate) {
+    if (marker.size === length) {
       return i + 1;
     }
   }
