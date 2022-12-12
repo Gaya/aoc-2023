@@ -1,4 +1,10 @@
-import { determinePrioritySum, findDouble, letterToPriority } from './rucksack';
+import {
+  determineBadgeTypePrioritySum,
+  determinePrioritySum,
+  findBadgeType,
+  findDouble,
+  letterToPriority,
+} from './rucksack';
 
 describe('findDouble', () => {
   it('should find the correct doubles', () => {
@@ -32,4 +38,21 @@ describe('determinePrioritySum', () => {
   it('should isolate doubles and sum up priorities', () => {
     expect(determinePrioritySum(input)).toBe(157);
   })
+});
+
+describe('findBadgeType', () => {
+  expect(findBadgeType(['vJrwpWtwJgWrhcsFMMfFFhFp','jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL', 'PmmdzqPrVvPwwTWBwg'])).toBe('r');
+  expect(findBadgeType(['wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn', 'ttgJtRGJQctTZtZT', 'CrZsJsPPZsGzwwsLwLmpwMDw'])).toBe('Z');
+});
+
+describe('determineBadgeTypePrioritySum', () => {
+  it('should correctly split groups and calculate priorities', () => {
+    expect(determineBadgeTypePrioritySum(`vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw
+`)).toBe(70);
+  });
 });
