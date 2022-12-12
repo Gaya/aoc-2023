@@ -36,4 +36,8 @@ describe('moveStacks', () => {
   it('should parse and move stacks according to instructions', () => {
     expect(moveStacks(input)).toBe('CMZ');
   });
+
+  it('should parse and move stacks according to instructions without reversing', () => {
+    expect(moveStacks(input, false)).toBe('MCD');
+  });
 });

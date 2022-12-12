@@ -16,7 +16,7 @@ export function parseInstructions(input: string): [number, number, number][] {
   return matches.map((m) => [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)]);
 }
 
-export function moveStacks(input: string): string {
+export function moveStacks(input: string, reversed = true): string {
   const stacks = parseStacks(input);
   const instructions = parseInstructions(input);
 
@@ -25,13 +25,13 @@ export function moveStacks(input: string): string {
     const t = to - 1;
 
     const stringToMove = acc[f]
-      .substring(0, amount)
-      .split('')
-      .reverse()
-      .join('');
+      .substring(0, amount);
 
     acc[f] = acc[f].substring(amount);
-    acc[t] = [stringToMove, acc[t]].join('');
+    acc[t] = [
+      reversed ? stringToMove.split('').reverse().join('') : stringToMove, 
+      acc[t],
+    ].join('');
 
     return acc;
   }, stacks);

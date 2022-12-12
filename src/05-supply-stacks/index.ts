@@ -7,7 +7,7 @@ export default async function solution() {
   const input = (await readFile(`${__dirname}/input.txt`)).toString();
 
   const part1 = moveStacks(input);
-  const part2 = 0;
+  const part2 = moveStacks(input, false);
 
   console.log(`Day 5 - Part 1: ${part1}`);
   console.log(`Day 5 - Part 2: ${part2}`);
