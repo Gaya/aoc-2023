@@ -8,13 +8,13 @@ fs.readdir(__dirname)
 
     for (const dir of files) {
       const module = await import(`${__dirname}/${dir}`);
-      const startDay = +new Date();
+      const startDay = process.hrtime();
       await module.default();
-      const time = +new Date() - startDay;
+      const time = process.hrtime(startDay)[1] / 1000000;
       totalTime += time;
-      console.log(`${dir} time: ${time}ms`);
+      console.log(`${dir} time: ${time.toPrecision(5)}ms`);
     }
 
-    console.log(`Execution time: ${totalTime}ms`);
+    console.log(`Execution time: ${totalTime.toPrecision(5)}ms`);
     console.log(`Total time: ${+new Date() - start}ms`);
   });
