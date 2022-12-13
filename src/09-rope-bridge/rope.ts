@@ -51,20 +51,30 @@ function moveRope(dir: Dir, rope: Pos[]): Pos[] {
   }
 
   const [hx, hy] = head;
-  const [nx, ny]: Pos = [hx + dx, hy + dy];
-  const [tx, ty]: Pos = restRope[0];
-  const [ddx, ddy]: Pos = determineChange([nx, ny], [tx, ty]);
+  const headPos: Pos = [hx + dx, hy + dy];
 
   return [
-    [nx, ny],
-    [tx + ddx, ty + ddy],
-  ];
+    headPos,
+    ...restRope,
+  ].reduce((acc: Pos[], [tx, ty], index) => {
+    if (index === 0) {
+      return [headPos];
+    }
+
+    const head = acc[index - 1];
+    const [ddx, ddy]: Pos = determineChange(head, [tx, ty]);
+
+    return [
+      ...acc,
+      [tx + ddx, ty + ddy]
+    ];
+  }, []);
 }
 
-export function ropeMoves(input: string, ropeLength = 1): number {
+export function ropeMoves(input: string, ropeLength = 2): number {
   const instructions = [...input.matchAll(instructExp)].map((i) => [i[1], parseInt(i[2], 10)]);
 
-  let rope: Pos[] = new Array(ropeLength + 1).fill([0, 0]);
+  let rope: Pos[] = new Array(ropeLength).fill([0, 0]);
   const touched: { [coord: string]: boolean } = {};
 
   for (const [d, amount] of instructions) {

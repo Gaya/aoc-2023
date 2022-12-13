@@ -22,7 +22,7 @@ R 4
 D 1
 L 5
 R 2`;
-    expect(ropeMoves(instructions, 9)).toBe(1);
+    expect(ropeMoves(instructions, 10)).toBe(1);
   });
 
   it('should accept rope length', () => {
@@ -34,6 +34,6 @@ R 17
 D 10
 L 25
 U 20`;
-    expect(ropeMoves(instructions, 9)).toBe(36);
+    expect(ropeMoves(instructions, 10)).toBe(36);
   });
 });
