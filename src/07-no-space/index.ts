@@ -9,6 +9,6 @@ export default async function solution() {
   const part1 = findAndSumDeletedFolders(input, 100000);
   const part2 = findFolderToDeleteAndSum(input, 70000000, 30000000);
 
-  console.log(`Day 6 - Part 1: ${part1}`);
-  console.log(`Day 6 - Part 2: ${part2}`);
+  console.log(`Day 7 - Part 1: ${part1}`);
+  console.log(`Day 7 - Part 2: ${part2}`);
 }
