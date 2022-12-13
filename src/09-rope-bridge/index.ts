@@ -1,10 +1,12 @@
 import { readFile } from 'fs/promises';
 
+import { ropeMoves } from './rope';
+
 // https://adventofcode.com/2022/day/9
 export default async function solution() {
   const input = (await readFile(`${__dirname}/input.txt`)).toString();
 
-  const part1 = 0;
+  const part1 = ropeMoves(input);
   const part2 = 0;
 
   console.log(`Day 9 - Part 1: ${part1}`);
