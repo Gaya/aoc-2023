@@ -3,30 +3,31 @@ const instructExp = /^([RULD]) (\d+)$/gm;
 type Dir = 'R' | 'U' | 'L' | 'D';
 type Pos = [number, number];
 
-function determineChange([hx, hy]: Pos, [tx, ty]: Pos): Pos {
-  let dx = 0;
-  let dy = 0;
+export function newPosition([hx, hy]: Pos, [tx, ty]: Pos): Pos {
+  let dx = hx - tx;
+  let dy = hy - ty;
 
   const xDist = Math.abs(hx - tx);
   const yDist = Math.abs(hy - ty);
 
-  if (xDist > 1) {
-    dx = tx < hx ? 1 : -1;
-
-    if (ty !== hy) {
-      dy = hy - ty;
-    }
+  // still touching, no need to move
+  if (xDist <= 1 && yDist <= 1) {
+    return [tx, ty];
   }
 
-  if (yDist > 1) {
+  // moved vertically
+  if (dx === 0) {
     dy = ty < hy ? 1 : -1;
-
-    if (tx !== hx) {
-      dx = hx - tx;
-    }
+  // moved horizontally
+  } else if (dy === 0) {
+    dx = tx < hx ? 1 : -1;
+  // moves diagonally
+  } else {
+    dy = ty < hy ? 1 : -1;
+    dx = tx < hx ? 1 : -1;
   }
 
-  return [dx, dy];
+  return [tx + dx, ty + dy];
 }
 
 function moveRope(dir: Dir, rope: Pos[]): Pos[] {
@@ -56,26 +57,25 @@ function moveRope(dir: Dir, rope: Pos[]): Pos[] {
   return [
     headPos,
     ...restRope,
-  ].reduce((acc: Pos[], [tx, ty], index) => {
+  ].reduce((acc: Pos[], next, index) => {
     if (index === 0) {
-      return [headPos];
+      return acc;
     }
 
-    const head = acc[index - 1];
-    const [ddx, ddy]: Pos = determineChange(head, [tx, ty]);
+    const prev = acc[index - 1];
 
     return [
       ...acc,
-      [tx + ddx, ty + ddy]
+      newPosition(prev, next),
     ];
-  }, []);
+  }, [headPos]);
 }
 
 export function ropeMoves(input: string, ropeLength = 2): number {
   const instructions = [...input.matchAll(instructExp)].map((i) => [i[1], parseInt(i[2], 10)]);
 
   let rope: Pos[] = new Array(ropeLength).fill([0, 0]);
-  const touched: { [coord: string]: boolean } = {};
+  const touched: { [c: string]: boolean } = {};
 
   for (const [d, amount] of instructions) {
     for (let  i = 0; i < amount; i++) {
