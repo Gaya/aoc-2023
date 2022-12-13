@@ -3,7 +3,7 @@
 ```
 Day 1 - Part 1: 68442
 Day 1 - Part 2: 204837
-01-calorie-counting time: 3ms
+01-calorie-counting time: 2ms
 Day 2 - Part 1: 11841
 Day 2 - Part 2: 13022
 02-rps time: 4ms
@@ -21,8 +21,11 @@ Day 6 - Part 2: 2334
 06-tuning-trouble time: 2ms
 Day 7 - Part 1: 1845346
 Day 7 - Part 2: 3636703
-07-no-space time: 3ms
-Execution time: 17ms
+07-no-space time: 4ms
+Day 8 - Part 1: 1854
+Day 8 - Part 2: 527340
+08-treetop-tree-house time: 38ms
+Execution time: 55ms
 ```
 
 ## Install
