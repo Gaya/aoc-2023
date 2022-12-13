@@ -3,32 +3,30 @@ const instructExp = /^([RULD]) (\d+)$/gm;
 type Dir = 'R' | 'U' | 'L' | 'D';
 type Pos = [number, number];
 
-function determineChange([hx, hy]: Pos, [tx, ty]: Pos, [dx, dy]: Pos): Pos {
-  let mx = 0;
-  let my = 0;
+function determineChange([hx, hy]: Pos, [tx, ty]: Pos): Pos {
+  let dx = 0;
+  let dy = 0;
 
-  const [nx, ny]: Pos = [hx + dx, hy + dy];
-
-  const xDist = Math.abs(nx - tx);
-  const yDist = Math.abs(ny - ty);
+  const xDist = Math.abs(hx - tx);
+  const yDist = Math.abs(hy - ty);
 
   if (xDist > 1) {
-    mx = dx;
+    dx = tx < hx ? 1 : -1;
 
     if (ty !== hy) {
-      my = hy - ty;
+      dy = hy - ty;
     }
   }
 
   if (yDist > 1) {
-    my = dy;
+    dy = ty < hy ? 1 : -1;
 
     if (tx !== hx) {
-      mx = hx - tx;
+      dx = hx - tx;
     }
   }
 
-  return [mx, my];
+  return [dx, dy];
 }
 
 function moveRope(dir: Dir, rope: Pos[]): Pos[] {
@@ -52,26 +50,14 @@ function moveRope(dir: Dir, rope: Pos[]): Pos[] {
       break;
   }
 
-  const headMove: Pos = [dx, dy];
   const [hx, hy] = head;
   const [nx, ny]: Pos = [hx + dx, hy + dy];
-
-  const changes = restRope.reduce((acc: Pos[], toMove, index) => {
-    const d = index === 0 ? headMove : acc[index - 1];
-    const h = index === 0 ? head : restRope[index - 1];
-
-    return [
-      ...acc,
-      determineChange(h, toMove, d),
-    ];
-  }, []);
+  const [tx, ty]: Pos = restRope[0];
+  const [ddx, ddy]: Pos = determineChange([nx, ny], [tx, ty]);
 
   return [
     [nx, ny],
-    ...changes.map(([cx, cy], index): Pos => {
-      const [x, y] = restRope[index];
-      return [x + cx, y + cy];
-    }),
+    [tx + ddx, ty + ddy],
   ];
 }
 

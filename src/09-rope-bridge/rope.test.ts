@@ -13,6 +13,18 @@ R 2`;
     expect(ropeMoves(instructions)).toBe(13);
   });
 
+  it('should count the amount of squares the head touched when rope is longer', () => {
+    const instructions = `R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2`;
+    expect(ropeMoves(instructions, 9)).toBe(1);
+  });
+
   it('should accept rope length', () => {
     const instructions = `R 5
 U 8
