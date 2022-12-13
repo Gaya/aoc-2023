@@ -56,20 +56,18 @@ export function ropeMoves(input: string): number {
 
   let H: Pos = [0, 0];
   let T: Pos = [0, 0];
-  const tTouched = [T];
+  const touched: { [coord: string]: boolean } = {};
 
   for (const [d, amount] of instructions) {
     for (let  i = 0; i < amount; i++) {
       const [newH, newT] = moveRope(d as Dir, H, T);
 
-      if (!tTouched.find((t) => t[0] === newT[0] && t[1] === newT[1])) {
-        tTouched.push(newT);
-      }
+      touched[newT.toString()] = true;
 
       H = newH;
       T = newT;
     }
   }
 
-  return tTouched.length;
+  return Object.keys(touched).length;
 }
