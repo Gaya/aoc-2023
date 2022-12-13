@@ -1,7 +1,7 @@
 import {
   Dir,
   dirSize, findAndSumDeletedFolders,
-  findFoldersByMaxSize,
+  findFoldersByMaxSize, findFolderToDeleteAndSum,
   listCommands,
   makeDirFromCommands,
   sumFiles,
@@ -165,4 +165,10 @@ describe('findAndSumDeletedFolders', () => {
   it('should parse the input and return the correct total size', () => {
     expect(findAndSumDeletedFolders(input, 100000)).toBe(95437);
   });
-})
+});
+
+describe('findFolderToDeleteAndSum', () => {
+  it('should find the smallest folder to delete and return its size', () => {
+    expect(findFolderToDeleteAndSum(input, 70000000, 30000000)).toBe(24933642);
+  });
+});

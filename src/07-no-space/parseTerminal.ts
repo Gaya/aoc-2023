@@ -85,3 +85,20 @@ export function findAndSumDeletedFolders(input: string, maxSize = 100000): numbe
 
   return filteredDirs.map((d) => dirSize(d.path, filteredDirs)).reduce((a, b) => a + b, 0);
 }
+
+export function findFolderToDeleteAndSum(
+  input: string,
+  diskSpace = 70000000,
+  updateSize = 30000000,
+): number {
+  const commands = listCommands(input);
+  const dirs = makeDirFromCommands(commands);
+  const currentSize = dirSize('/', dirs);
+  const spaceNeededForUpdate = updateSize - (diskSpace - currentSize);
+
+  const dirToDelete = dirs
+    .filter((d) => dirSize(d.path, dirs) >= spaceNeededForUpdate)
+    .reduce((a: Dir, b: Dir) => dirSize(a.path, dirs) < dirSize(b.path, dirs) ? a : b);
+
+  return dirSize(dirToDelete.path, dirs);
+}
