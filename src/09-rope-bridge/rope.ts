@@ -62,7 +62,7 @@ export function ropeMoves(input: string): number {
     for (let  i = 0; i < amount; i++) {
       const [newH, newT] = moveRope(d as Dir, H, T);
 
-      touched[newT.toString()] = true;
+      touched[`${newT[0]},${newT[1]}`] = true;
 
       H = newH;
       T = newT;
