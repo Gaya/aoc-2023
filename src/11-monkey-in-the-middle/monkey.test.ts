@@ -1,10 +1,11 @@
-import { parseMonkeyInput, performOperation } from './monkey';
+import { doMonkeyRound, parseMonkeyInput, performOperation } from './monkey';
 
 import testData from './monkey.test.data';
 
 const parsedMonkeys = {
   0: {
     id: 0,
+    inspections: 0,
     items: [79, 98],
     operation: 'old * 19',
     divisible: 23,
@@ -13,6 +14,7 @@ const parsedMonkeys = {
   },
   1: {
     id: 1,
+    inspections: 0,
     items: [54, 65, 75, 74],
     operation: 'old + 6',
     divisible: 19,
@@ -21,6 +23,7 @@ const parsedMonkeys = {
   },
   2: {
     id: 2,
+    inspections: 0,
     items: [79, 60, 97],
     operation: 'old * old',
     divisible: 13,
@@ -29,6 +32,7 @@ const parsedMonkeys = {
   },
   3: {
     id: 3,
+    inspections: 0,
     items: [74],
     operation: 'old + 3',
     divisible: 17,
@@ -58,3 +62,15 @@ describe('performOperation', () => {
     expect(performOperation('old * old', 3)).toBe(9);
   });
 });
+
+describe('doMonkeyRound', () => {
+  it('can perform a round of monkey item throwing', () => {
+    /*
+    Monkey 0: 20, 23, 27, 26
+    Monkey 1: 2080, 25, 167, 207, 401, 1046
+    Monkey 2:
+    Monkey 3:
+     */
+    expect(doMonkeyRound(parsedMonkeys)).toStrictEqual(parsedMonkeys);
+  });
+})

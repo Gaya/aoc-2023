@@ -5,6 +5,7 @@ type Monkeys = Record<number, Monkey>;
 
 interface Monkey {
   id: number;
+  inspections: number;
   items: number[];
   operation: string;
   divisible: number;
@@ -21,6 +22,7 @@ export function parseMonkeyInput(input: string): Monkeys {
 
     const monkey: Monkey = {
       id: parseInt(match.groups.monkey, 10),
+      inspections: 0,
       items: match.groups.items.split(', ').map((i) => parseInt(i, 10)),
       operation: match.groups.operation,
       divisible: parseInt(match.groups.divisible, 10),
@@ -54,4 +56,25 @@ export function performOperation(operation: string, input: number): number {
   }
 
   return input;
+}
+
+export function doMonkeyRound(monkeys: Monkeys): Monkeys {
+  const shallowMonkeys = { ...monkeys };
+
+  for (const monkey of Object.values(shallowMonkeys)) {
+    do {
+      const item = monkey.items.shift();
+
+      if (!item) continue;
+
+      const worryLevel = Math.floor(performOperation(monkey.operation, item) / 3);
+      const worryCheckedOut = worryLevel / monkey.divisible === 1;
+
+      shallowMonkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse].items.push(worryLevel);
+
+      monkey.inspections += 1;
+    } while (monkey.items.length > 0);
+  }
+
+  return shallowMonkeys;
 }
