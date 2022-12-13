@@ -1,4 +1,4 @@
-import { parseMonkeyInput } from './monkey';
+import { parseMonkeyInput, performOperation } from './monkey';
 
 import testData from './monkey.test.data';
 
@@ -40,5 +40,21 @@ const parsedMonkeys = {
 describe('parseMonkeyInput', () => {
   it('should parse input and turn into monkeys', () => {
     expect(parseMonkeyInput(testData)).toStrictEqual(parsedMonkeys);
+  });
+});
+
+describe('performOperation', () => {
+  it('should be able to sum', () => {
+    expect(performOperation('5 + 5', 0)).toBe(10);
+    expect(performOperation('old + 5', 3)).toBe(8);
+    expect(performOperation('5 + old', 3)).toBe(8);
+    expect(performOperation('old + old', 3)).toBe(6);
+  });
+
+  it('should be able to multiply', () => {
+    expect(performOperation('5 * 5', 0)).toBe(25);
+    expect(performOperation('old * 5', 3)).toBe(15);
+    expect(performOperation('5 * old', 3)).toBe(15);
+    expect(performOperation('old * old', 3)).toBe(9);
   });
 });

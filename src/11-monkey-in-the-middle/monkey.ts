@@ -1,4 +1,5 @@
 const monkeyParser = /^Monkey (?<monkey>\d+):\n[\sa-zA-Z:]+(?<items>[\d+,\s]+)\n[\sa-zA-Z:]+=\s(?<operation>.+)\n[\sa-zA-Z:]+(?<divisible>\d+)\n[\sa-zA-Z:]+(?<true>\d+)\n[\sa-zA-Z:]+(?<false>\d+)/gm;
+const operationParser = /^(old|\d+) ([+*]) (old|\d+)$/
 
 type Monkeys = Record<number, Monkey>;
 
@@ -32,4 +33,25 @@ export function parseMonkeyInput(input: string): Monkeys {
       [monkey.id]: monkey,
     }
   }, {});
+}
+
+export function performOperation(operation: string, input: number): number {
+  const [_, f, o, s] = operation.match(operationParser) || [];
+
+  if (!_) {
+    return input;
+  }
+
+  const first = f === 'old' ? input : parseInt(f, 10);
+  const second = s === 'old' ? input : parseInt(s, 10);
+
+  if (o === '+') {
+    return first + second;
+  }
+
+  if (o === '*') {
+    return first * second;
+  }
+
+  return input;
 }
