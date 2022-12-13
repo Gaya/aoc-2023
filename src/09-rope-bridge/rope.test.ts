@@ -12,4 +12,16 @@ L 5
 R 2`;
     expect(ropeMoves(instructions)).toBe(13);
   });
+
+  it('should accept rope length', () => {
+    const instructions = `R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20`;
+    expect(ropeMoves(instructions, 9)).toBe(36);
+  });
 });
