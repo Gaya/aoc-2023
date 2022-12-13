@@ -6,6 +6,7 @@ function toGrid(input: string): number[][] {
 
 export function findVisibleTrees(input: string): number {
   const grid = toGrid(input);
+  const vertGrid = grid[0].map((cols, c) => grid.map((rows, r) => grid[r][c]));
   const rows = grid.length;
   const cols = grid[0].length;
 
@@ -20,19 +21,17 @@ export function findVisibleTrees(input: string): number {
         // check visibility
         const height = grid[r][c];
         const row = grid[r];
-        const col = grid.map((items) => items[c]);
+        const col = vertGrid[c];
 
         if (
-          ![
-            // left
-            row.filter((n, i) => i < c && n >= height).length > 0,
-            // right
-            row.filter((n, i) => i > c && n >= height).length > 0,
-            // up
-            col.filter((n, i) => i < r && n >= height).length > 0,
-            // down
-            col.filter((n, i) => i > r && n >= height).length > 0,
-          ].every((v) => v)
+          // left
+          row.filter((n, i) => i < c && n >= height).length === 0
+          // up
+          || col.filter((n, i) => i < r && n >= height).length === 0
+          // right
+          || row.filter((n, i) => i > c && n >= height).length === 0
+          // down
+          || col.filter((n, i) => i > r && n >= height).length === 0
         ) {
           visibleTrees++;
         }
