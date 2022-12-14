@@ -8,7 +8,7 @@ type Monkeys = Record<number, Monkey>;
 interface Monkey {
   id: number;
   inspections: number;
-  items: number[];
+  items: bigint[];
   operation: string;
   divisible: number;
   ifTrue: number;
@@ -25,7 +25,7 @@ export function parseMonkeyInput(input: string): Monkeys {
     const monkey: Monkey = {
       id: parseInt(match.groups.monkey, 10),
       inspections: 0,
-      items: match.groups.items.split(', ').map((i) => parseInt(i, 10)),
+      items: match.groups.items.split(', ').map((i) => BigInt(parseInt(i, 10))),
       operation: match.groups.operation,
       divisible: parseInt(match.groups.divisible, 10),
       ifTrue: parseInt(match.groups.true, 10),
@@ -39,15 +39,15 @@ export function parseMonkeyInput(input: string): Monkeys {
   }, {});
 }
 
-export function performOperation(operation: string, input: number): number {
+export function performOperation(operation: string, input: bigint): bigint {
   const [_, f, o, s] = operation.match(operationParser) || [];
 
   if (!_) {
     return input;
   }
 
-  const first = f === 'old' ? input : parseInt(f, 10);
-  const second = s === 'old' ? input : parseInt(s, 10);
+  const first = f === 'old' ? input : BigInt(parseInt(f, 10));
+  const second = s === 'old' ? input : BigInt(parseInt(s, 10));
 
   if (o === '+') {
     return first + second;
@@ -60,27 +60,40 @@ export function performOperation(operation: string, input: number): number {
   return input;
 }
 
-export function doMonkeyRound(monkeys: Monkeys, amount = 1): Monkeys {
-  const copyMonkeys: Monkeys = deepCopy(monkeys);
-
-  for (const monkey of Object.values(copyMonkeys)) {
+function doMonkeyRound(monkeys: Monkeys, suppressWorry = true): Monkeys {
+  for (const monkey of Object.values(monkeys)) {
     do {
       const item = monkey.items.shift();
 
       if (!item) continue;
 
-      const worryLevel = Math.floor(performOperation(monkey.operation, item) / 3);
-      const worryCheckedOut = worryLevel % monkey.divisible === 0;
+      let worryLevel = performOperation(monkey.operation, item);
 
-      copyMonkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse].items.push(worryLevel);
+      if (suppressWorry) {
+        worryLevel = BigInt(worryLevel / BigInt(3));
+      }
+
+      const worryCheckedOut = worryLevel % BigInt(monkey.divisible) === BigInt(0);
+
+      monkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse].items.push(worryLevel);
 
       monkey.inspections += 1;
     } while (monkey.items.length > 0);
   }
 
-  if (amount - 1 === 0) {
-    return copyMonkeys;
+  return monkeys;
+}
+
+export function doMonkeyRounds(monkeys: Monkeys, amount = 1, suppressWorry = true) {
+  for (let  i = 0; i < amount; i++) {
+    monkeys = doMonkeyRound(monkeys, suppressWorry);
   }
 
-  return doMonkeyRound(copyMonkeys, amount - 1);
+  return monkeys;
+}
+
+export function getMonkeyBusiness(monkeys: Monkeys): number {
+  const [a, b] = Object.values(monkeys).map((m) => m.inspections).sort((a, b) => b - a);
+
+  return a * b;
 }
