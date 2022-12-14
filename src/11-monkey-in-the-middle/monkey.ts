@@ -1,5 +1,3 @@
-import { deepCopy } from '../utils';
-
 const monkeyParser = /^Monkey (?<monkey>\d+):\n[\sa-zA-Z:]+(?<items>[\d+,\s]+)\n[\sa-zA-Z:]+=\s(?<operation>.+)\n[\sa-zA-Z:]+(?<divisible>\d+)\n[\sa-zA-Z:]+(?<true>\d+)\n[\sa-zA-Z:]+(?<false>\d+)/gm;
 const operationParser = /^(old|\d+) ([+*]) (old|\d+)$/
 
@@ -8,7 +6,7 @@ type Monkeys = Record<number, Monkey>;
 interface Monkey {
   id: number;
   inspections: number;
-  items: bigint[];
+  items: number[];
   operation: string;
   divisible: number;
   ifTrue: number;
@@ -25,7 +23,7 @@ export function parseMonkeyInput(input: string): Monkeys {
     const monkey: Monkey = {
       id: parseInt(match.groups.monkey, 10),
       inspections: 0,
-      items: match.groups.items.split(', ').map((i) => BigInt(parseInt(i, 10))),
+      items: match.groups.items.split(', ').map((i) => parseInt(i, 10)),
       operation: match.groups.operation,
       divisible: parseInt(match.groups.divisible, 10),
       ifTrue: parseInt(match.groups.true, 10),
@@ -39,15 +37,15 @@ export function parseMonkeyInput(input: string): Monkeys {
   }, {});
 }
 
-export function performOperation(operation: string, input: bigint): bigint {
+export function performOperation(operation: string, input: number): number {
   const [_, f, o, s] = operation.match(operationParser) || [];
 
   if (!_) {
     return input;
   }
 
-  const first = f === 'old' ? input : BigInt(parseInt(f, 10));
-  const second = s === 'old' ? input : BigInt(parseInt(s, 10));
+  const first = f === 'old' ? input : parseInt(f, 10);
+  const second = s === 'old' ? input : parseInt(s, 10);
 
   if (o === '+') {
     return first + second;
@@ -70,12 +68,21 @@ function doMonkeyRound(monkeys: Monkeys, suppressWorry = true): Monkeys {
       let worryLevel = performOperation(monkey.operation, item);
 
       if (suppressWorry) {
-        worryLevel = BigInt(worryLevel / BigInt(3));
+        worryLevel = Math.floor(worryLevel / 3);
       }
 
-      const worryCheckedOut = worryLevel % BigInt(monkey.divisible) === BigInt(0);
+      const worryCheckedOut = worryLevel % monkey.divisible === 0;
 
-      monkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse].items.push(worryLevel);
+      const [_, f, o, s] = monkey.operation.match(operationParser) || [];
+
+      let passWorryLevel = worryLevel;
+
+      if (!suppressWorry) {
+        passWorryLevel = o === '*' ? item : worryLevel;
+      }
+
+      monkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse]
+        .items.push(passWorryLevel);
 
       monkey.inspections += 1;
     } while (monkey.items.length > 0);
