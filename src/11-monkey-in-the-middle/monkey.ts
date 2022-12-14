@@ -59,6 +59,8 @@ export function performOperation(operation: string, input: number): number {
 }
 
 function doMonkeyRound(monkeys: Monkeys, suppressWorry = true): Monkeys {
+  const suppressMod = Object.values(monkeys).map((m) => m.divisible).reduce((a, b) => a * b);
+
   for (const monkey of Object.values(monkeys)) {
     do {
       const item = monkey.items.shift();
@@ -73,16 +75,8 @@ function doMonkeyRound(monkeys: Monkeys, suppressWorry = true): Monkeys {
 
       const worryCheckedOut = worryLevel % monkey.divisible === 0;
 
-      const [_, f, o, s] = monkey.operation.match(operationParser) || [];
-
-      let passWorryLevel = worryLevel;
-
-      if (!suppressWorry) {
-        passWorryLevel = o === '*' ? item : worryLevel;
-      }
-
       monkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse]
-        .items.push(passWorryLevel);
+        .items.push(suppressWorry ? worryLevel : worryLevel % suppressMod);
 
       monkey.inspections += 1;
     } while (monkey.items.length > 0);
