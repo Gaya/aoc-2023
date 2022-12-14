@@ -39,7 +39,7 @@ acctuvwj
 abdefghi`;
 
     const grid = parseInput(input);
-    const route = findPath(grid, findStartingNode(grid, 27));
+    const route = findPath(grid, true);
 
     expect(Object.keys(route).length - 1).toBe(29);
   });

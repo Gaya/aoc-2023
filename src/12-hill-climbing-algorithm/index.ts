@@ -9,7 +9,7 @@ export default async function solution() {
   const grid = parseInput(input);
 
   const path = findPath(grid);
-  const path2 = findPath(grid, findStartingNode(grid, 27), 0);
+  const path2 = findPath(grid, true);
 
   const part1 = path.length - 1;
   const part2 = path2.length - 1;

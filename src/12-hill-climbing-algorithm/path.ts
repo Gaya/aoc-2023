@@ -39,6 +39,7 @@ function getNeighbours(
   nodes: NodeSet,
   node: Node,
   visited: Record<string, boolean>,
+  reversed = false,
 ): string[] {
   const { r, c } = node;
 
@@ -68,7 +69,7 @@ type NodeSet = Record<string, Node>;
 
 export function findPath(
   grid: number[][],
-  startingNode = findStartingNode(grid),
+  reversed = false,
 ): Node[] {
   let working = true;
   const visited: Record<string, boolean> = {};
@@ -91,11 +92,12 @@ export function findPath(
   let unvisited: string[] = Object.keys(nodes);
 
   // set distance to zero for starting node
+  const startingNode = findStartingNode(grid, reversed ? 27 : 0);
   nodes[startingNode].d = 0;
   let currentNode = nodes[startingNode];
 
   while (working) {
-    const neighbours = getNeighbours(nodes, currentNode, visited);
+    const neighbours = getNeighbours(nodes, currentNode, visited, reversed);
 
     // work on neighbours
     for (const neighbour of neighbours) {
