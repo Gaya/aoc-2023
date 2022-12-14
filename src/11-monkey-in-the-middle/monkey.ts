@@ -1,3 +1,5 @@
+import { deepCopy } from '../utils';
+
 const monkeyParser = /^Monkey (?<monkey>\d+):\n[\sa-zA-Z:]+(?<items>[\d+,\s]+)\n[\sa-zA-Z:]+=\s(?<operation>.+)\n[\sa-zA-Z:]+(?<divisible>\d+)\n[\sa-zA-Z:]+(?<true>\d+)\n[\sa-zA-Z:]+(?<false>\d+)/gm;
 const operationParser = /^(old|\d+) ([+*]) (old|\d+)$/
 
@@ -58,23 +60,27 @@ export function performOperation(operation: string, input: number): number {
   return input;
 }
 
-export function doMonkeyRound(monkeys: Monkeys): Monkeys {
-  const shallowMonkeys = { ...monkeys };
+export function doMonkeyRound(monkeys: Monkeys, amount = 1): Monkeys {
+  const copyMonkeys: Monkeys = deepCopy(monkeys);
 
-  for (const monkey of Object.values(shallowMonkeys)) {
+  for (const monkey of Object.values(copyMonkeys)) {
     do {
       const item = monkey.items.shift();
 
       if (!item) continue;
 
       const worryLevel = Math.floor(performOperation(monkey.operation, item) / 3);
-      const worryCheckedOut = worryLevel / monkey.divisible === 1;
+      const worryCheckedOut = worryLevel % monkey.divisible === 0;
 
-      shallowMonkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse].items.push(worryLevel);
+      copyMonkeys[worryCheckedOut ? monkey.ifTrue : monkey.ifFalse].items.push(worryLevel);
 
       monkey.inspections += 1;
     } while (monkey.items.length > 0);
   }
 
-  return shallowMonkeys;
+  if (amount - 1 === 0) {
+    return copyMonkeys;
+  }
+
+  return doMonkeyRound(copyMonkeys, amount - 1);
 }

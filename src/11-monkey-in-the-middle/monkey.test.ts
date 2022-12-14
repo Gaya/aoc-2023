@@ -1,5 +1,6 @@
-import { doMonkeyRound, parseMonkeyInput, performOperation } from './monkey';
+import { deepCopy } from '../utils';
 
+import { doMonkeyRound, parseMonkeyInput, performOperation } from './monkey';
 import testData from './monkey.test.data';
 
 const parsedMonkeys = {
@@ -43,7 +44,7 @@ const parsedMonkeys = {
 
 describe('parseMonkeyInput', () => {
   it('should parse input and turn into monkeys', () => {
-    expect(parseMonkeyInput(testData)).toStrictEqual(parsedMonkeys);
+    expect(parseMonkeyInput(testData)).toStrictEqual(deepCopy(parsedMonkeys));
   });
 });
 
@@ -65,12 +66,32 @@ describe('performOperation', () => {
 
 describe('doMonkeyRound', () => {
   it('can perform a round of monkey item throwing', () => {
-    /*
-    Monkey 0: 20, 23, 27, 26
-    Monkey 1: 2080, 25, 167, 207, 401, 1046
-    Monkey 2:
-    Monkey 3:
-     */
-    expect(doMonkeyRound(parsedMonkeys)).toStrictEqual(parsedMonkeys);
+    const monkeys = deepCopy(parsedMonkeys);
+
+    monkeys[0].items = [20, 23, 27, 26];
+    monkeys[0].inspections = 2;
+    monkeys[1].items = [2080, 25, 167, 207, 401, 1046];
+    monkeys[1].inspections = 4;
+    monkeys[2].items = [];
+    monkeys[2].inspections = 3;
+    monkeys[3].items = [];
+    monkeys[3].inspections = 5;
+
+    expect(doMonkeyRound(deepCopy(parsedMonkeys))).toMatchObject(monkeys);
+  });
+
+  it('can perform 20 rounds of monkey item throwing', () => {
+    const monkeys = deepCopy(parsedMonkeys);
+
+    monkeys[0].items = [10, 12, 14, 26, 34];
+    monkeys[0].inspections = 101;
+    monkeys[1].items = [245, 93, 53, 199, 115];
+    monkeys[1].inspections = 95;
+    monkeys[2].items = [];
+    monkeys[2].inspections = 7;
+    monkeys[3].items = [];
+    monkeys[3].inspections = 105;
+
+    expect(doMonkeyRound(deepCopy(parsedMonkeys), 20)).toMatchObject(monkeys);
   });
 })
