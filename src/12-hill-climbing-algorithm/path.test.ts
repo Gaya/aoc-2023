@@ -1,4 +1,4 @@
-import { findPath, parseInput } from './path';
+import { findPath, findStartingNode, parseInput } from './path';
 
 describe('parseInput', () => {
   it('should parse the puzzle input to height maps', () => {
@@ -29,5 +29,18 @@ abdefghi`;
     const route = findPath(parseInput(input));
 
     expect(Object.keys(route).length - 1).toBe(31);
+  });
+
+  it('should find a path in reverse', () => {
+    const input = `Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi`;
+
+    const grid = parseInput(input);
+    const route = findPath(grid, findStartingNode(grid, 27));
+
+    expect(Object.keys(route).length - 1).toBe(29);
   });
 });

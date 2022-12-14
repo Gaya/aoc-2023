@@ -19,13 +19,13 @@ export function parseInput(input: string): number[][] {
     : [];
 }
 
-function findStartingNode(grid: number[][]): string {
+export function findStartingNode(grid: number[][], target = 0): string {
   return grid.reduce((result, cols, r) => {
     if (result !== '') {
       return result;
     }
 
-    const c = cols.findIndex((v) => v === 0);
+    const c = cols.findIndex((v) => v === target);
 
     if (c === -1) {
       return result;
@@ -35,35 +35,23 @@ function findStartingNode(grid: number[][]): string {
   }, '');
 }
 
-function getNeighbours(grid: number[][], unvisited: NodeSet, node: Node): string[] {
+function getNeighbours(
+  nodes: NodeSet,
+  node: Node,
+  visited: Record<string, boolean>,
+): string[] {
   const { r, c } = node;
-  const rows = grid.length;
-  const cols = grid[0].length;
 
   const neighbours = [];
-
-  // up
-  if (r > 0) {
-    neighbours.push(`${r - 1}_${c}`);
-  }
-
-  // left
-  if (c > 0) {
-    neighbours.push(`${r}_${c - 1}`);
-  }
-
-  // down
-  if (r + 1 <= rows) {
-    neighbours.push(`${r + 1}_${c}`);
-  }
-
-  // right
-  if (c + 1 <= cols) {
-    neighbours.push(`${r}_${c + 1}`);
-  }
+  neighbours.push(`${r - 1}_${c}`);
+  neighbours.push(`${r}_${c - 1}`);
+  neighbours.push(`${r + 1}_${c}`);
+  neighbours.push(`${r}_${c + 1}`);
 
   return neighbours
-    .filter((n) => unvisited[n] && unvisited[n].h - 1 <= node.h);
+    .filter((n) => nodes[n]
+      && !visited[n]
+      && nodes[n].h - 1 <= node.h);
 }
 
 interface Node {
@@ -78,11 +66,15 @@ interface Node {
 
 type NodeSet = Record<string, Node>;
 
-export function findPath(grid: number[][]): Node[] {
+export function findPath(
+  grid: number[][],
+  startingNode = findStartingNode(grid),
+): Node[] {
   let working = true;
+  const visited: Record<string, boolean> = {};
 
   // create unvisited set
-  const unvisited: NodeSet = grid.reduce((acc: NodeSet, cols, r) => {
+  const nodes: NodeSet = grid.reduce((acc: NodeSet, cols, r) => {
     return cols.reduce((acc2: NodeSet, h, c) => ({
       ...acc2,
       [`${r}_${c}`]: {
@@ -90,28 +82,24 @@ export function findPath(grid: number[][]): Node[] {
         r,
         c,
         f: [],
-        h: h === 27 ? 26 : h,
+        h: Math.max(1, Math.min(26, h)),
         d: Infinity,
         e: h === 27,
       },
     }), acc);
   }, {});
-
-  const visited: NodeSet = {};
-
-  const startingNode = findStartingNode(grid);
+  let unvisited: string[] = Object.keys(nodes);
 
   // set distance to zero for starting node
-  unvisited[startingNode].d = 0;
-
-  let currentNode = unvisited[startingNode];
+  nodes[startingNode].d = 0;
+  let currentNode = nodes[startingNode];
 
   while (working) {
-    const neighbours = getNeighbours(grid, unvisited, currentNode);
+    const neighbours = getNeighbours(nodes, currentNode, visited);
 
     // work on neighbours
     for (const neighbour of neighbours) {
-      const n = unvisited[neighbour];
+      const n = nodes[neighbour];
       const newDist = 1 + currentNode.d;
       if (n.d > newDist) {
         n.d = newDist;
@@ -120,19 +108,20 @@ export function findPath(grid: number[][]): Node[] {
     }
 
     // move currentNode to visited
-    visited[currentNode.k] = currentNode;
-    delete unvisited[currentNode.k];
-
-    const leftToVisit = Object.values(unvisited);
+    unvisited = unvisited.filter((v) => v !== currentNode.k);
+    visited[currentNode.k] = true;
 
     // stop if destination or everything in unvisited is Infinity
-    if (currentNode.e || Object.values(unvisited).every((n) => n.d === Infinity)) {
+    if (
+      currentNode.e || unvisited.every((n) => nodes[n].d === Infinity)
+    ) {
       working = false;
+      continue;
     }
 
     // select new node to check
-    leftToVisit.sort((a, b) => a.d - b.d);
-    currentNode = leftToVisit[0];
+    unvisited.sort((a, b) => nodes[a].d - nodes[b].d);
+    currentNode = nodes[unvisited[0]];
 
     // is new node the destination? We can stop now.
     if (currentNode.e) {
@@ -148,7 +137,7 @@ export function findPath(grid: number[][]): Node[] {
   while (working) {
     const next = currentNode.f[0];
     path.unshift(currentNode);
-    currentNode = visited[next];
+    currentNode = nodes[next];
 
     if (!next) {
       working = false;
