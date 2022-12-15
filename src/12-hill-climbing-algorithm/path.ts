@@ -43,11 +43,12 @@ function getNeighbours(
 ): string[] {
   const { r, c } = node;
 
-  const neighbours = [];
-  neighbours.push(`${r - 1}_${c}`);
-  neighbours.push(`${r}_${c - 1}`);
-  neighbours.push(`${r + 1}_${c}`);
-  neighbours.push(`${r}_${c + 1}`);
+  const neighbours = [
+    `${r - 1}_${c}`,
+    `${r}_${c - 1}`,
+    `${r + 1}_${c}`,
+    `${r}_${c + 1}`,
+  ];
 
   return neighbours
     .filter((n) => nodes[n]
@@ -70,7 +71,7 @@ type NodeSet = Record<string, Node>;
 export function findPath(
   grid: number[][],
   reversed = false,
-): Node[] {
+): string[] {
   let working = true;
   const visited: Record<string, boolean> = {};
 
@@ -132,13 +133,13 @@ export function findPath(
   }
 
   // reverse engineer path through visited
-  let path: Node[] = [];
+  let path: string[] = [];
 
   working = true;
 
   while (working) {
     const next = currentNode.f[0];
-    path.unshift(currentNode);
+    path.unshift(currentNode.k);
     currentNode = nodes[next];
 
     if (!next) {

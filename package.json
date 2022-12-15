@@ -4,7 +4,10 @@
   "description": "Advent of Code 2022",
   "scripts": {
     "test": "jest",
-    "start": "node -r ts-node/register ./src/index.ts"
+    "copy-input": "rsync -rmv --include='*/' --include='*.txt' --exclude='*' src/ dist",
+    "build": "rm -rf ./dist && mkdir ./dist && tsc && npm run copy-input",
+    "prestart": "npm run build",
+    "start": "node ./dist/index.js"
   },
   "keywords": [
     "aoc"
