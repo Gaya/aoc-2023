@@ -81,7 +81,7 @@ function getTile(grid: Grid, x: number, y: number): Tile | undefined {
   return grid.grid[y] ? grid.grid[y][x] : undefined;
 }
 
-export function moveSand(grid: Grid): Grid {
+export function moveSand(grid: Grid, withBottom = false): Grid {
   const [sx, sy] = grid.start;
 
   // no sand yet, draw a grain
@@ -149,7 +149,7 @@ function symbolByTile(t?: Tile): string {
   }
 }
 
-function drawGrid(grid: Grid): void {
+function drawGrid(grid: Grid, withBottom = false): void {
   const { x1, x2, y1, y2 } = grid;
 
   for (let x = x1; x < x2 + 7; x++) {
@@ -164,19 +164,33 @@ function drawGrid(grid: Grid): void {
     }
     process.stdout.write('  |\n');
   }
+
+  if (withBottom) {
+    process.stdout.write('|  ');
+    for (let x = x1; x < x2 + 1; x++) {
+      process.stdout.write(' ');
+    }
+    process.stdout.write('  |\n');
+    process.stdout.write('|##');
+    for (let x = x1; x < x2 + 1; x++) {
+      process.stdout.write('#');
+    }
+    process.stdout.write('##|\n');
+  }
+
   for (let x = x1; x < x2 + 7; x++) {
     process.stdout.write('-');
   }
   process.stdout.write('\n');
 }
 
-export function dropSand(grid: Grid, render = false): Grid {
+export function dropSand(grid: Grid, withBottom = false, render = false): Grid {
   while (!grid.abyss) {
-    grid = moveSand(grid);
+    grid = moveSand(grid, withBottom);
   }
 
   if (render) {
-    drawGrid(grid);
+    drawGrid(grid, withBottom);
   }
 
   return grid;
