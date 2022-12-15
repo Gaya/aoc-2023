@@ -52,7 +52,7 @@ function getNeighbours(
   return neighbours
     .filter((n) => nodes[n]
       && !visited[n]
-      && nodes[n].h - 1 <= node.h);
+      && (reversed ? nodes[n].h + 1 >= node.h : nodes[n].h - 1 <= node.h));
 }
 
 interface Node {
@@ -85,7 +85,7 @@ export function findPath(
         f: [],
         h: Math.max(1, Math.min(26, h)),
         d: Infinity,
-        e: h === 27,
+        e: (!reversed && h === 27) || (reversed && h <= 1),
       },
     }), acc);
   }, {});
