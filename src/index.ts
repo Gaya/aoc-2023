@@ -27,13 +27,13 @@ readdir(__dirname)
       const time = process.hrtime(startDay)[1] / 1000000;
       totalTime += time;
 
-      console.info(`======= Day ${i} =======`);
+      console.info(`======== Day ${i} ========`);
       console.log(`Part 1: ${p1}`);
       console.log(`Part 2: ${p2}`);
       console.log(`⏱ Day ${i} time: ${time.toPrecision(5)}ms`);
     }
 
-    console.info('======================');
+    console.info('========================');
     console.log(`Execution time: ${totalTime.toPrecision(5)}ms`);
     console.log(`⏱ Total time: ${+new Date() - start}ms`);
   })
