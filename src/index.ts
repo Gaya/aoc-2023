@@ -20,17 +20,17 @@ readdir(__dirname)
     const start = +new Date();
     let totalTime = 0;
 
-    for (let i = 0; i < modAndInputs.length; i++) {
+    for (let i = 1; i < modAndInputs.length; i++) {
       const startDay = process.hrtime();
       const [module, input] = modAndInputs[i];
       const [p1, p2] = module.default(input);
       const time = process.hrtime(startDay)[1] / 1000000;
       totalTime += time;
 
-      console.info(`======= Day ${i + 1} =======`);
+      console.info(`======= Day ${i} =======`);
       console.log(`Part 1: ${p1}`);
       console.log(`Part 2: ${p2}`);
-      console.log(`⏱ Day ${i + 1} time: ${time.toPrecision(5)}ms`);
+      console.log(`⏱ Day ${i} time: ${time.toPrecision(5)}ms`);
     }
 
     console.info('======================');
