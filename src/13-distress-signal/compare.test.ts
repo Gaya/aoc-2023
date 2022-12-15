@@ -1,4 +1,11 @@
-import { isRightOrder, parsePackets, sumRightOrders } from './compare';
+import {
+  findDecoderKey,
+  isRightOrder,
+  orderPackets,
+  parseCombinedPackets,
+  parsePackets,
+  sumRightOrders,
+} from './compare';
 
 const input = `[1,1,3,1,1]
 [1,1,5,1,1]
@@ -24,9 +31,9 @@ const input = `[1,1,3,1,1]
 [1,[2,[3,[4,[5,6,7]]]],8,9]
 [1,[2,[3,[4,[5,6,0]]]],8,9]`;
 
-describe('parsePackets', () => {
+describe('parseCombinedPackets', () => {
   it('should correctly turn input into packets', () => {
-    expect(parsePackets(input)).toStrictEqual([
+    expect(parseCombinedPackets(input)).toStrictEqual([
       [
         [1,1,3,1,1],
         [1,1,5,1,1],
@@ -59,6 +66,29 @@ describe('parsePackets', () => {
         [1,[2,[3,[4,[5,6,7]]]],8,9],
         [1,[2,[3,[4,[5,6,0]]]],8,9]
       ]
+    ]);
+  });
+});
+
+describe('parsePackets', () => {
+  it('should list all packets individually', () => {
+    expect(parsePackets(input)).toStrictEqual([
+      [1,1,3,1,1],
+      [1,1,5,1,1],
+      [[1],[2,3,4]],
+      [[1],4],
+      [9],
+      [[8,7,6]],
+      [[4,4],4,4],
+      [[4,4],4,4,4],
+      [7,7,7,7],
+      [7,7,7],
+      [],
+      [3],
+      [[[]]],
+      [[]],
+      [1,[2,[3,[4,[5,6,7]]]],8,9],
+      [1,[2,[3,[4,[5,6,0]]]],8,9],
     ]);
   });
 });
@@ -114,10 +144,47 @@ describe('isRightOrder', () => {
   it('passes test example 8', () => {
     expect(isRightOrder([1,[2,[3,[4,[5,6,7]]]],8,9], [1,[2,[3,[4,[5,6,0]]]],8,9])).toBe(false);
   });
+
+  it('should handle comparing special case where NULL is returned', () => {
+    expect(isRightOrder([1,[2,[3,[4,[5,6,7]]]],8,9], [[1],4])).toBe(true);
+  });
 });
 
 describe('sumRightOrders', () => {
   it('should sum up the indexes of the rightly ordered indices', () => {
-    expect(sumRightOrders(parsePackets(input))).toBe(13);
+    expect(sumRightOrders(parseCombinedPackets(input))).toBe(13);
+  });
+});
+
+describe('orderPackets', () => {
+  it('should order packets correctly', () => {
+    const ordered = orderPackets(parsePackets(input));
+
+    expect(ordered).toStrictEqual([
+      [],
+      [[]],
+      [[[]]],
+      [1,1,3,1,1],
+      [1,1,5,1,1],
+      [[1],[2,3,4]],
+      [1,[2,[3,[4,[5,6,0]]]],8,9],
+      [1,[2,[3,[4,[5,6,7]]]],8,9],
+      [[1],4],
+      [[2]],
+      [3],
+      [[4,4],4,4],
+      [[4,4],4,4,4],
+      [[6]],
+      [7,7,7],
+      [7,7,7,7],
+      [[8,7,6]],
+      [9],
+    ]);
+  });
+});
+
+describe('findDecoderKey', () => {
+  it('should find decoder packets and determine decoder key', () => {
+    expect(findDecoderKey(parsePackets(input))).toBe(140);
   });
 });

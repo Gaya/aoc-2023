@@ -1,8 +1,9 @@
 const matchCompares = /^(\[.*])\n(\[.*])$/gm;
+const matchPacket = /^(\[.*])$/gm;
 
-type Compare = Array<number | Compare>;
+type Packet = Array<number | Packet>;
 
-export function parsePackets(input: string): Compare[][] {
+export function parseCombinedPackets(input: string): Packet[][] {
   const results = input.match(matchCompares);
 
   if (!results) {
@@ -12,15 +13,25 @@ export function parsePackets(input: string): Compare[][] {
   return results.map((r) => r.split('\n').map((a) => JSON.parse(a)));
 }
 
+export function parsePackets(input: string): Packet[] {
+  const results = input.match(matchPacket);
+
+  if (!results) {
+    return [];
+  }
+
+  return results.map((a) => JSON.parse(a));
+}
+
 function isNumber(i: unknown): i is number {
   return typeof i === 'number';
 }
 
-function isArray(i: unknown): i is Compare {
+function isArray(i: unknown): i is Packet {
   return Array.isArray(i);
 }
 
-export function isRightOrder(a: Compare, b: Compare, start = true): boolean | null {
+export function isRightOrder(a: Packet, b: Packet, start = true): boolean | null {
   let hasChecked = false;
 
   for (let i = 0; i < a.length; i++) {
@@ -43,15 +54,17 @@ export function isRightOrder(a: Compare, b: Compare, start = true): boolean | nu
       } else if (bItem > aItem) {
         return true;
       }
-    } else if (isArray(aItem) && isArray(bItem)) {
-      // both arrays
-      const arrCompare = isRightOrder(aItem, bItem, false);
-      if (arrCompare !== null) {
-        return arrCompare;
-      }
     } else {
-      // if there is one single digit
-      return isRightOrder(isArray(aItem) ? aItem : [aItem], isArray(bItem) ? bItem : [bItem], false);
+      let compare = isRightOrder(
+        isArray(aItem) ? aItem : [aItem],
+        isArray(bItem) ? bItem : [bItem],
+        false,
+      );
+
+      // made a choice? Share it... or skip to next
+      if (compare !== null) {
+        return compare;
+      }
     }
   }
 
@@ -62,6 +75,19 @@ export function isRightOrder(a: Compare, b: Compare, start = true): boolean | nu
   return true;
 }
 
-export function sumRightOrders(list: Compare[][]): number {
+export function sumRightOrders(list: Packet[][]): number {
   return list.reduce((acc, [a, b], index) => isRightOrder(a, b) ? acc + index + 1 : acc, 0);
+}
+
+export function orderPackets(list: Packet[], extra = [[[2]], [[6]]]): Packet[] {
+  const outcome = [...list, ...extra];
+  outcome.sort((a, b) => isRightOrder(a, b) ? -1 : 1);
+  return outcome;
+}
+
+export function findDecoderKey(list: Packet[]): number {
+  const orderedPackets = orderPackets(list);
+  const first = orderedPackets.findIndex((p) => JSON.stringify(p) === '[[2]]') + 1;
+  const second = orderedPackets.findIndex((p) => JSON.stringify(p) === '[[6]]') + 1;
+  return first * second;
 }
