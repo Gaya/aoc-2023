@@ -5,8 +5,7 @@ type Sensors = {
   x2: number
   y1: number;
   y2: number;
-  itemsY: Record<number, Record<number, number>>;
-  itemsX: Record<number, Record<number, number>>;
+  items: [number, number, number][];
 };
 
 export function parseSensorInput(input: string): Sensors {
@@ -15,8 +14,7 @@ export function parseSensorInput(input: string): Sensors {
     x2: 0,
     y1: 0,
     y2: 0,
-    itemsY: {},
-    itemsX: {},
+    items: [],
   };
   const parsed = [...input.matchAll(findCoordinates)].map((m) => parseInt(m[1], 10));
 
@@ -30,37 +28,71 @@ export function parseSensorInput(input: string): Sensors {
     const dx = Math.abs(x1 - x2);
     const dy = Math.abs(y1 - y2);
 
-    if (!sensors.itemsX[x1]) {
-      sensors.itemsX[x1] = {};
+    const d = dx + dy;
+
+    if (x1 - d < sensors.x1) {
+      sensors.x1 = x1 - d;
     }
 
-    if (!sensors.itemsY[y1]) {
-      sensors.itemsY[y1] = {};
+    if (x1 + d > sensors.x2) {
+      sensors.x2 = x1 + d;
     }
 
-    const dist = dx + dy;
-
-    if (x1 - dist < sensors.x1) {
-      sensors.x1 = x1 - dist;
+    if (y1 - d < sensors.y1) {
+      sensors.y1 = y1 - d;
     }
 
-    if (x1 + dist > sensors.x2) {
-      sensors.x2 = x1 + dist;
+    if (y1 + d > sensors.y2) {
+      sensors.y2 = y1 + d;
     }
 
-    if (y1 - dist < sensors.y1) {
-      sensors.y1 = y1 - dist;
-    }
-
-    if (y1 + dist > sensors.y2) {
-      sensors.y2 = y1 + dist;
-    }
-
-    sensors.itemsX[x1][y1] = dist;
-    sensors.itemsY[y1][x1] = dist;
+    sensors.items.push([x1, y1, d]);
   }
 
   return sensors;
+}
+
+function widthOnY(y1: number, y2: number, d: number): number {
+  const dx = Math.abs(y2 - y1);
+
+  if (dx > d) {
+    return -1;
+  }
+
+  return Math.abs(dx - d);
+}
+
+type Positions = [number, number][];
+
+export function countInRanges(ranges: [number, number][], r1 = 0, r2 = 20): number {
+  let count = 0;
+  for (let x = r1; x < r2 + 1; x++) {
+    if (ranges.find(([x1, x2]) => x >= x1 && x <= x2)) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+export function scanRangesOnRow(
+  sensors: Sensors,
+  row: number,
+  r1 = sensors.x1,
+  r2 = sensors.x2,
+): [number, number][] {
+  return sensors.items.reduce((acc: Positions, [x, y, d]) => {
+    const width = widthOnY(row, y, d);
+
+    if (width > -1) {
+      return [
+        ...acc,
+        [Math.max(r1, x - width), Math.min(r2, x + width)],
+      ];
+    }
+
+    return acc;
+  }, []);
 }
 
 export function scannedColsInRow(
@@ -68,43 +100,19 @@ export function scannedColsInRow(
   row: number,
   r1 = sensors.x1,
   r2 = sensors.x2,
-): Record<number, boolean> {
-  const positions: Record<number, boolean> = {};
-
-  for (let x = sensors.x1; x < sensors.x2; x++) {
-    if (sensors.itemsX[x]) {
-      Object
-        .entries(sensors.itemsX[x])
-        .forEach(([sy, d]) => {
-          const y = parseInt(sy, 10);
-
-          const dy = Math.abs(y - row);
-
-          if (dy <= d) {
-            // falls in range now determine positions scanned on row
-            const fill = Math.abs(dy - d);
-
-            for (let fx = x - fill; fx < x + (fill + 1); fx++) {
-              if (fx >= r1 && fx <= r2) {
-                positions[fx] = true;
-              }
-            }
-          }
-        });
-    }
-  }
-
-  return positions;
+): number {
+  const ranges = scanRangesOnRow(sensors, row, r1, r2);
+  return countInRanges(ranges, r1, r2);
 }
 
 export function findDistressBeacon(sensors: Sensors, r1 = 0, r2 = 20): number {
   for (let y = r1; y < r2 + 1; y++) {
-    const positions = scannedColsInRow(sensors, y, r1, r2);
+    const positions = scanRangesOnRow(sensors, y, r1, r2);
 
-    if (Object.keys(positions).length !== (r2 - r1) + 1) {
+    if (countInRanges(positions) !== (r2 - r1) + 1) {
       // find x position
       for (let x = r1; x < r2 + 1; x++) {
-        if (!positions[x]) {
+        if (!positions.find(([x1, x2]) => x >= x1 && x <= x2)) {
           return (x * 4000000) + y;
         }
       }

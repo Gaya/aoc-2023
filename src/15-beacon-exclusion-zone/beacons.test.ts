@@ -1,4 +1,4 @@
-import { findDistressBeacon, parseSensorInput, scannedColsInRow } from './beacons';
+import { countInRanges, findDistressBeacon, parseSensorInput, scannedColsInRow } from './beacons';
 
 describe('parseSensorInput', () => {
   const input = `Sensor at x=2, y=18: closest beacon is at x=-2, y=15
@@ -9,13 +9,14 @@ Sensor at x=10, y=20: closest beacon is at x=10, y=16
 Sensor at x=14, y=2: closest beacon is at x=10, y=16`;
 
   it('turns input into a list of coordinates and distances', () => {
-    expect(parseSensorInput(input).itemsY).toMatchObject({
-      2: { 13: 3, 14: 18 },
-      14: { 12: 4 },
-      16: { 9: 1 },
-      18: { 2: 7 },
-      20: { 10: 4 },
-    });
+    expect(parseSensorInput(input).items).toMatchObject([
+      [2, 18, 7],
+      [9, 16, 1],
+      [13, 2, 3],
+      [12, 14, 4],
+      [10, 20, 4],
+      [14, 2, 18],
+    ]);
   });
 });
 
@@ -36,7 +37,7 @@ Sensor at x=16, y=7: closest beacon is at x=15, y=3
 Sensor at x=14, y=3: closest beacon is at x=15, y=3
 Sensor at x=20, y=1: closest beacon is at x=15, y=3`;
 
-    expect(Object.keys(scannedColsInRow(parseSensorInput(input), 10)).length).toBe(27);
+    expect(scannedColsInRow(parseSensorInput(input), 10)).toBe(27);
   });
 });
 
