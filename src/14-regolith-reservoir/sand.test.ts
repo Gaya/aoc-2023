@@ -319,9 +319,15 @@ describe('dropSand', () => {
 503,4 -> 502,4 -> 502,9 -> 494,9`;
 
   it('stops when sand falls into abyss', () => {
-    const grid = dropSand(fillGrid(input));
+    const grid = dropSand(fillGrid(input), false, true);
 
     expect(grid.abyss).toStrictEqual([494, 8]);
     expect(countSand(grid)).toBe(24);
+  });
+
+  it('stops when sand cannot fall anymore', () => {
+    const grid = dropSand(fillGrid(input), true, true);
+
+    expect(countSand(grid)).toBe(93);
   });
 });

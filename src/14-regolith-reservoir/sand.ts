@@ -6,6 +6,7 @@ export type Grid = {
   start: [number, number];
   grain?: [number, number];
   abyss?: [number, number];
+  done?: boolean;
   x1: number;
   x2: number;
   y1: number;
@@ -78,11 +79,23 @@ export function fillGrid(input: string, [sx, sy]: [number, number] = [500, 0]): 
 }
 
 function getTile(grid: Grid, x: number, y: number): Tile | undefined {
+  // hits the bottom
+  if (y == grid.y2 + 2) {
+    return 'r';
+  }
+
   return grid.grid[y] ? grid.grid[y][x] : undefined;
 }
 
 export function moveSand(grid: Grid, withBottom = false): Grid {
   const [sx, sy] = grid.start;
+
+  // there is already sand at the start! stop now
+  const start = getTile(grid, sx, sy);
+  if (start === 'o') {
+    grid.done = true;
+    return grid;
+  }
 
   // no sand yet, draw a grain
   if (typeof grid.grain === 'undefined') {
@@ -116,9 +129,23 @@ export function moveSand(grid: Grid, withBottom = false): Grid {
     if (typeof nextPosition === 'undefined') {
       // does the grain fall off the grid?
       if (ny > grid.y2 || nx < grid.x1 || nx > grid.x2) {
-        delete grid.grain;
-        grid.abyss = [gx, gy];
-        return grid;
+        // does it not have a bottom? Then fall into abyss
+        if (!withBottom) {
+          delete grid.grain;
+          grid.abyss = [gx, gy];
+          grid.done = true;
+          return grid;
+        } else {
+          // expand grid borders to the left
+          if (nx < grid.x1) {
+            grid.x1 = nx;
+          }
+
+          // expand grid borders to the right
+          if (nx > grid.x2) {
+            grid.x2 = nx;
+          }
+        }
       }
 
       return moveGridGrain(grid, nx, ny);
@@ -157,7 +184,7 @@ function drawGrid(grid: Grid, withBottom = false): void {
   }
   process.stdout.write('\n');
 
-  for (let y = y1; y < y2 + 1; y++) {
+  for (let y = y1; y < y2 + (withBottom ? 2 : 1); y++) {
     process.stdout.write('|  ');
     for (let x = x1; x < x2 + 1; x++) {
       process.stdout.write(symbolByTile(getTile(grid, x, y)));
@@ -166,11 +193,6 @@ function drawGrid(grid: Grid, withBottom = false): void {
   }
 
   if (withBottom) {
-    process.stdout.write('|  ');
-    for (let x = x1; x < x2 + 1; x++) {
-      process.stdout.write(' ');
-    }
-    process.stdout.write('  |\n');
     process.stdout.write('|##');
     for (let x = x1; x < x2 + 1; x++) {
       process.stdout.write('#');
@@ -185,7 +207,7 @@ function drawGrid(grid: Grid, withBottom = false): void {
 }
 
 export function dropSand(grid: Grid, withBottom = false, render = false): Grid {
-  while (!grid.abyss) {
+  while (!grid.done) {
     grid = moveSand(grid, withBottom);
   }
 
