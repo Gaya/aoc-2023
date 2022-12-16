@@ -63,7 +63,12 @@ export function parseSensorInput(input: string): Sensors {
   return sensors;
 }
 
-export function scannedColsInRow(sensors: Sensors, row: number): number {
+export function scannedColsInRow(
+  sensors: Sensors,
+  row: number,
+  r1 = sensors.x1,
+  r2 = sensors.x2,
+): Record<number, boolean> {
   const positions: Record<number, boolean> = {};
 
   for (let x = sensors.x1; x < sensors.x2; x++) {
@@ -79,13 +84,32 @@ export function scannedColsInRow(sensors: Sensors, row: number): number {
             // falls in range now determine positions scanned on row
             const fill = Math.abs(dy - d);
 
-            for (let fx = x - fill; fx < x + fill; fx++) {
-              positions[fx] = true;
+            for (let fx = x - fill; fx < x + (fill + 1); fx++) {
+              if (fx >= r1 && fx <= r2) {
+                positions[fx] = true;
+              }
             }
           }
         });
     }
   }
 
-  return Object.keys(positions).length;
+  return positions;
+}
+
+export function findDistressBeacon(sensors: Sensors, r1 = 0, r2 = 20): number {
+  for (let y = r1; y < r2 + 1; y++) {
+    const positions = scannedColsInRow(sensors, y, r1, r2);
+
+    if (Object.keys(positions).length !== (r2 - r1) + 1) {
+      // find x position
+      for (let x = r1; x < r2 + 1; x++) {
+        if (!positions[x]) {
+          return (x * 4000000) + y;
+        }
+      }
+    }
+  }
+
+  return 0;
 }
