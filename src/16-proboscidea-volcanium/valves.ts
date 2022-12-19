@@ -122,8 +122,8 @@ export function parseAndCreateState(input: string): ValvesState {
 }
 
 export function findMaxPossibleFlow(valves: Valves, start: Valve, minutes: number): number {
-  let unopenedValves = Object.values(valves);
-  const flows: Record<string, number[]> = unopenedValves
+  const allValves = Object.values(valves);
+  const flows: Record<string, number[]> = allValves
     .reduce((acc, valve) => {
       let outputs: number[] = [];
 
@@ -136,54 +136,50 @@ export function findMaxPossibleFlow(valves: Valves, start: Valve, minutes: numbe
         [valve.key]: outputs,
       };
     }, {});
+  const scores: Record<string, number> = {};
+  const flowValves = allValves.filter((v) => v.flow > 0);
+  let highestScore = 0;
 
-  const openedValves: string[] = [];
-  let currentMinutes = minutes;
-  let currentValve = start;
-  const scores: Record<string, number> = unopenedValves.reduce((acc, v) => {
-    if (v.flow === 0) {
-      return acc;
-    }
-
-    return {
-      ...acc,
-      [v.key]: -Infinity,
-    };
-  }, {});
-  scores[start.key] = 0;
-
-  let working = true;
-
-  while (working) {
-    const others = Object.entries(currentValve.distances)
-      .filter(([k]) => !openedValves.includes(k) && Object.keys(scores).includes(k));
-
-    for (const [k, d] of others) {
-      const f = flows[k][currentMinutes - d - 1] + scores[currentValve.key];
-      if (f > scores[k]) {
-        scores[k] = f;
-      }
-    }
-
-    openedValves.push(currentValve.key);
-    const unopened = Object.entries(scores)
-      .filter(([k]) => !openedValves.includes(k));
-
-    if (
-      currentMinutes === 0
-      || unopened.every(([k, s]) => s === -Infinity)
-      || unopened.length === 0
-    ) {
-      working = false;
-      return Math.max(...Object.values(scores));
-    }
-
-    unopened.sort(([_, a], [__, b]) => b - a);
-    const next = unopened[0][0];
-    const dist = currentValve.distances[next];
-    currentValve = valves[unopened[0][0]];
-    currentMinutes = currentMinutes - dist - 1;
+  function maxTotal(valvesLeft: Valve[], minutesLeft: number): number {
+    return valvesLeft.reduce((acc, v) => {
+      return acc + (flows[v.key][minutesLeft] || 0);
+    }, 0);
   }
 
-  return 0;
+  function findScores(
+    currentValve: Valve,
+    opened: string[],
+    minutesLeft: number,
+    path: string,
+    score: number,
+  ) {
+    const otherValves = flowValves.filter((v) => !opened.includes(v.key));
+
+    if (otherValves.length === 0 || minutesLeft < 1) {
+      scores[path] = score;
+    }
+
+    for (const nextValve of otherValves) {
+      const d = currentValve.distances[nextValve.key];
+      const t = minutesLeft - d - 1;
+      const f = flows[nextValve.key][t];
+      const p = [path, nextValve.key].join(':');
+      const o = [...opened, nextValve.key];
+      const s = f + score;
+      const max = maxTotal(otherValves.filter((v) => !o.includes(v.key)), minutesLeft - 1);
+
+      if (s > highestScore) {
+        highestScore = s;
+      }
+
+      // give it a chance
+      if (s + max > highestScore) {
+        findScores(nextValve, o, t, p, s);
+      }
+    }
+  }
+
+  findScores(start, [], minutes, 'AA', 0);
+
+  return highestScore;
 }
