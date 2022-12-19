@@ -1,4 +1,10 @@
-import { countInRanges, findDistressBeacon, parseSensorInput, scannedColsInRow } from './beacons';
+import {
+  combineRanges,
+  countInRanges,
+  findDistressBeacon,
+  parseSensorInput,
+  scannedColsInRow,
+} from './beacons';
 
 describe('parseSensorInput', () => {
   const input = `Sensor at x=2, y=18: closest beacon is at x=-2, y=15
@@ -59,5 +65,12 @@ Sensor at x=14, y=3: closest beacon is at x=15, y=3
 Sensor at x=20, y=1: closest beacon is at x=15, y=3`;
 
     expect(findDistressBeacon(parseSensorInput(input))).toBe(56000011);
+  });
+});
+
+describe('combineRanges', () => {
+  it('sorts and combines range into merged chunks', () => {
+    expect(combineRanges([[1, 4], [8, 12], [3, 6]])).toStrictEqual([[1, 6], [8, 12]]);
+    expect(combineRanges([[1, 4], [8, 12], [2, 3]])).toStrictEqual([[1, 4], [8, 12]]);
   });
 });

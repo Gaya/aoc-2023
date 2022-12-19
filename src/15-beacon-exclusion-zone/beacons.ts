@@ -64,6 +64,28 @@ function widthOnY(y1: number, y2: number, d: number): number {
 
 type Positions = [number, number][];
 
+export function combineRanges(ranges: [number, number][]): [number, number][] {
+  const sorted = [...ranges].sort((a, b) => a[0] - b[0]);
+
+  return sorted.reduce((acc: [number, number][], range) => {
+    const restAcc = [...acc];
+    const lastRange = restAcc.pop();
+
+    if (!lastRange) {
+      return [range];
+    }
+
+    if (range[0] >= lastRange[0] && range[0] <= lastRange[1]) {
+      return [
+        ...restAcc,
+        [lastRange[0], Math.max(lastRange[1], range[1])],
+      ];
+    }
+
+    return [...acc, range];
+  }, []);
+}
+
 export function countInRanges(ranges: [number, number][], r1 = 0, r2 = 20): number {
   let count = 0;
   for (let x = r1; x < r2 + 1; x++) {
@@ -108,14 +130,11 @@ export function scannedColsInRow(
 export function findDistressBeacon(sensors: Sensors, r1 = 0, r2 = 20): number {
   for (let y = r1; y < r2 + 1; y++) {
     const positions = scanRangesOnRow(sensors, y, r1, r2);
+    const ranges = combineRanges(positions);
 
-    if (countInRanges(positions) !== (r2 - r1) + 1) {
-      // find x position
-      for (let x = r1; x < r2 + 1; x++) {
-        if (!positions.find(([x1, x2]) => x >= x1 && x <= x2)) {
-          return (x * 4000000) + y;
-        }
-      }
+    if (ranges.length !== 1) {
+      const x = ranges[0][1] + 1;
+      return (x * 4000000) + y;
     }
   }
 
