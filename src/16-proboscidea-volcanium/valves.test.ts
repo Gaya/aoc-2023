@@ -64,8 +64,13 @@ Valve HH has flow rate=22; tunnel leads to valve GG
 Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II`;
 
-  it('should find the closest valve with the most output ratio', () => {
+  it('should find max output flow for 30 minutes', () => {
     const valves = parseValves(input);
     expect(findMaxPossibleFlow(valves, valves['AA'], 30)).toBe(1651);
+  });
+
+  it.only('should find max output flow while explaining it to the elephant', () => {
+    const valves = parseValves(input);
+    expect(findMaxPossibleFlow(valves, valves['AA'], 26, 26)).toBe(1707);
   });
 });

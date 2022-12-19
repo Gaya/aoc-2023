@@ -121,7 +121,12 @@ export function parseAndCreateState(input: string): ValvesState {
   };
 }
 
-export function findMaxPossibleFlow(valves: Valves, start: Valve, minutes: number): number {
+export function findMaxPossibleFlow(
+  valves: Valves,
+  start: Valve,
+  minutes: number,
+  elephantMinutes = 0,
+): number {
   const allValves = Object.values(valves);
   const flows: Record<string, number[]> = allValves
     .reduce((acc, valve) => {
@@ -152,34 +157,53 @@ export function findMaxPossibleFlow(valves: Valves, start: Valve, minutes: numbe
     minutesLeft: number,
     path: string,
     score: number,
+    currentValveElephant: Valve,
+    elephantMinutesLeft: number,
   ) {
     const otherValves = flowValves.filter((v) => !opened.includes(v.key));
 
-    if (otherValves.length === 0 || minutesLeft < 1) {
+    if (otherValves.length === 0) {
       scores[path] = score;
+      if (score > highestScore) {
+        highestScore = score;
+      }
     }
 
     for (const nextValve of otherValves) {
-      const d = currentValve.distances[nextValve.key];
-      const t = minutesLeft - d - 1;
-      const f = flows[nextValve.key][t];
-      const p = [path, nextValve.key].join(':');
+      const humansTurn = minutesLeft >= elephantMinutesLeft;
+
+      const d = (humansTurn ? currentValve : currentValveElephant).distances[nextValve.key];
+      const t = humansTurn ? Math.max(minutesLeft - d - 1, 0) : minutesLeft;
+      const et = humansTurn ? elephantMinutesLeft : Math.max(elephantMinutesLeft - d - 1, 0);
+      const f = flows[nextValve.key][humansTurn ? t : et];
+      const p = [path, humansTurn ? 'h' : 'e', nextValve.key].join(':');
       const o = [...opened, nextValve.key];
       const s = f + score;
-      const max = maxTotal(otherValves.filter((v) => !o.includes(v.key)), minutesLeft - 1);
+      const max = maxTotal(
+        otherValves.filter((v) => !o.includes(v.key)),
+        Math.max(minutesLeft - 1, elephantMinutesLeft -1),
+      );
 
       if (s > highestScore) {
         highestScore = s;
       }
 
       // give it a chance
-      if (s + max > highestScore) {
-        findScores(nextValve, o, t, p, s);
+      if (s + max >= highestScore) {
+        findScores(
+          humansTurn ? nextValve : currentValve,
+          o,
+          t,
+          p,
+          s,
+          !humansTurn ? nextValve : currentValveElephant,
+          et,
+        );
       }
     }
   }
 
-  findScores(start, [], minutes, 'AA', 0);
+  findScores(start, [], minutes, 'AA', 0, start, elephantMinutes);
 
   return highestScore;
 }
