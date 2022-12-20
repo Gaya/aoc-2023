@@ -69,6 +69,9 @@ describe('hasCollision', () => {
 
     expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 1, position: [3, 2] }], 'v')).toBe(true);
     expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 1, position: [3, 1] }], 'v')).toBe(false);
+
+    expect(hasCollision({ shape: 2, position: [0, 6] }, [{ shape: 1, position: [2, 3] }], 'v')).toBe(false);
+    expect(hasCollision({ shape: 2, position: [0, 5] }, [{ shape: 1, position: [2, 3] }], 'v')).toBe(true);
   });
 });
 
@@ -195,5 +198,10 @@ describe('advanceStep', () => {
 describe('stackAfterRocks', () => {
   it('should match the provide example of the AoC', () => {
     expect(stackAfterRocks('>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>', 2022)).toBe(3068);
+  });
+
+  it('should match the provide example of the AoC with insane amount', () => {
+    expect(stackAfterRocks('>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>', 1000000000000))
+      .toBe(1514285714288);
   });
 });

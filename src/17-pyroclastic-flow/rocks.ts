@@ -2,7 +2,7 @@ const blockTypes = {
   // -
   0: [[0, 0], [1, 0], [2, 0], [3, 0]],
   // +
-  1: [[1, 0], [0, -1], [1, -1], [2, -1], [2, -2]],
+  1: [[1, 0], [0, -1], [1, -1], [2, -1], [1, -2]],
   // L flipped H
   2: [[2, 0], [2, -1], [0, -2], [1, -2], [2, -2]],
   // |
@@ -38,6 +38,14 @@ function shapeWidth(shape: number): number {
   }
 }
 
+export function stackHeight(blocks: Block[]): number {
+  if (blocks.length === 0) {
+    return -1;
+  }
+
+  return Math.max(...blocks.map((b) => b.position[1]));
+}
+
 function shapeHeight(shape: number): number {
   switch (shape) {
     case 4:
@@ -59,13 +67,13 @@ export function placeNewBlock(game: Game) {
   }
 
   const lastFixed = game.fixed[game.fixed.length - 1];
-  const stackHeight = lastFixed ? lastFixed.position[1] : -1;
+  const height = stackHeight(game.fixed);
   const lastBlock = !lastFixed ? 4 : lastFixed.shape;
   const shape = (lastBlock + 1) % 5 as 0 | 1 | 2 | 3 | 4;
 
   const current: Block = {
     shape,
-    position: [2, stackHeight + 3 + shapeHeight(shape)],
+    position: [2, height + 3 + shapeHeight(shape)],
   };
 
   return {
@@ -131,7 +139,50 @@ export function hasCollision(
   });
 }
 
-export function advanceStep(game: Game): Game {
+function renderBlocks(game: Game): void {
+  const rows = stackHeight(game.fixed);
+  const fills: Record<number, Record<number, '#' | '@' | 'X'>> = {};
+
+  function placeInFill(b: Block, letter: '#' | '@' = '#') {
+    const shape = blockTypes[b.shape];
+    const [dx, dy] = b.position;
+
+    shape.forEach(([x, y]) => {
+      if (!fills[y + dy]) {
+        fills[y + dy] = {};
+      }
+
+      fills[y + dy][x + dx] = fills[y + dy][x + dx] ? 'X' : letter;
+    });
+  }
+
+  if (game.current) {
+    placeInFill(game.current, '@');
+  }
+
+  game.fixed.forEach((b) => {
+    placeInFill(b);
+  });
+
+  const top = game.current ? game.current.position[1] : rows;
+
+  for (let y = top; y >= 0; y--) {
+    process.stdout.write('|');
+    for (let x = 0; x < game.width; x++) {
+      const w = fills[y] ? fills[y][x] || '.' : '.';
+      process.stdout.write(w);
+    }
+    process.stdout.write('|\n');
+  }
+
+  process.stdout.write('+');
+  for (let x = 0; x < game.width; x++) {
+    process.stdout.write('-');
+  }
+  process.stdout.write('+\n\n');
+}
+
+export function advanceStep(game: Game, render = false): Game {
   if (!game.current) {
     throw new Error('Game should have a current block.');
   }
@@ -158,11 +209,15 @@ export function advanceStep(game: Game): Game {
   }
 
   // move down
-  if (hasCollision(game.current, game.fixed, 'v', game.width)) {
+  if (hasCollision(newGame.current, newGame.fixed, 'v', newGame.width)) {
     // move to fixed
     newGame.fixed = [...newGame.fixed, newGame.current];
     delete newGame.current;
     newGame = placeNewBlock(newGame);
+
+    if (render) {
+      renderBlocks(newGame);
+    }
   } else {
     // move one down
     newGame.current = {
@@ -180,6 +235,5 @@ export function stackAfterRocks(moves: string, amount = 2022): number {
     game = advanceStep(game);
   }
 
-  const lastFixed = game.fixed[game.fixed.length - 1];
-  return lastFixed.position[1] + shapeHeight(lastFixed.shape);
+  return stackHeight(game.fixed) + 1;
 }
