@@ -71,6 +71,6 @@ Valve JJ has flow rate=21; tunnel leads to valve II`;
 
   it.only('should find max output flow while explaining it to the elephant', () => {
     const valves = parseValves(input);
-    expect(findMaxPossibleFlow(valves, valves['AA'], 26, 26)).toBe(1707);
+    expect(findMaxPossibleFlow(valves, valves['AA'], 26, true)).toBe(1707);
   });
 });

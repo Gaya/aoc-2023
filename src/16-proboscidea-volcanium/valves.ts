@@ -101,31 +101,11 @@ export function parseValves(input: string): Valves {
   }, valves);
 }
 
-interface ValvesState {
-  valves: Valves;
-  current: Valve;
-  released: number;
-  opened: string[];
-  minutesLeft: number;
-}
-
-export function parseAndCreateState(input: string): ValvesState {
-  const valves = parseValves(input);
-
-  return {
-    valves,
-    current: valves['AA'],
-    released: 0,
-    opened: [],
-    minutesLeft: 30,
-  };
-}
-
 export function findMaxPossibleFlow(
   valves: Valves,
   start: Valve,
   minutes: number,
-  elephantMinutes = 0,
+  withElephant = false,
 ): number {
   const allValves = Object.values(valves);
   const flows: Record<string, number[]> = allValves
@@ -157,53 +137,47 @@ export function findMaxPossibleFlow(
     minutesLeft: number,
     path: string,
     score: number,
-    currentValveElephant: Valve,
-    elephantMinutesLeft: number,
+    eCurrentValve: Valve,
+    eMinutesLeft: number,
   ) {
+    const human = !withElephant || minutesLeft >= eMinutesLeft;
+
     const otherValves = flowValves.filter((v) => !opened.includes(v.key));
 
-    if (otherValves.length === 0) {
-      scores[path] = score;
-      if (score > highestScore) {
-        highestScore = score;
-      }
-    }
-
     for (const nextValve of otherValves) {
-      const humansTurn = minutesLeft >= elephantMinutesLeft;
-
-      const d = (humansTurn ? currentValve : currentValveElephant).distances[nextValve.key];
-      const t = humansTurn ? Math.max(minutesLeft - d - 1, 0) : minutesLeft;
-      const et = humansTurn ? elephantMinutesLeft : Math.max(elephantMinutesLeft - d - 1, 0);
-      const f = flows[nextValve.key][humansTurn ? t : et];
-      const p = [path, humansTurn ? 'h' : 'e', nextValve.key].join(':');
+      const d = (human ? currentValve : eCurrentValve).distances[nextValve.key];
+      const t = human ? minutesLeft - d - 1 : minutesLeft;
+      const et = !human ? eMinutesLeft - d - 1 : eMinutesLeft;
+      const f = flows[nextValve.key][human ? t : et];
+      const p = [path, nextValve.key].join(':');
       const o = [...opened, nextValve.key];
       const s = f + score;
       const max = maxTotal(
         otherValves.filter((v) => !o.includes(v.key)),
-        Math.max(minutesLeft - 1, elephantMinutesLeft -1),
+        Math.max(minutesLeft - 1, eMinutesLeft - 1),
       );
 
       if (s > highestScore) {
         highestScore = s;
+        scores[p] = s;
       }
 
       // give it a chance
-      if (s + max >= highestScore) {
+      if (t > 0 && et > 0 && s + max >= highestScore) {
         findScores(
-          humansTurn ? nextValve : currentValve,
+          human ? nextValve : currentValve,
           o,
           t,
           p,
           s,
-          !humansTurn ? nextValve : currentValveElephant,
+          !human ? nextValve : eCurrentValve,
           et,
         );
       }
     }
   }
 
-  findScores(start, [], minutes, 'AA', 0, start, elephantMinutes);
+  findScores(start, [], minutes, 'AA', 0, start, minutes);
 
   return highestScore;
 }
