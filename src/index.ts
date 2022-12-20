@@ -4,6 +4,8 @@ interface Module {
   default(input: string): [number | string, number | string];
 }
 
+const days = process.argv.slice(2).map((b) => parseInt(b, 10));
+
 readdir(__dirname)
   .then((files) => files.filter((file) => file.match(/^(\d+)+.+$/)))
   .then((files): Promise<[Module, string][]> => {
@@ -21,6 +23,11 @@ readdir(__dirname)
     let totalTime = 0;
 
     for (let i = 1; i < modAndInputs.length; i++) {
+      if (days.length > 0 && !days.includes(i)) {
+        console.log('Skip day:', i);
+        continue;
+      }
+
       const startDay = process.hrtime();
       const [module, input] = modAndInputs[i];
       const [p1, p2] = module.default(input);
