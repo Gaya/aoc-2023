@@ -19,8 +19,11 @@ interface Block {
 interface Game {
   width: number;
   current?: Block;
+  lastFixed?: Block;
   moves: string;
-  fixed: Block[];
+  highestStack: number;
+  amountFixed: number;
+  rocks: Record<number, Record<number, boolean>>;
 }
 
 function shapeWidth(shape: number): number {
@@ -36,14 +39,6 @@ function shapeWidth(shape: number): number {
     case 0:
       return 4;
   }
-}
-
-export function stackHeight(blocks: Block[]): number {
-  if (blocks.length === 0) {
-    return -1;
-  }
-
-  return Math.max(...blocks.map((b) => b.position[1]));
 }
 
 function shapeHeight(shape: number): number {
@@ -66,8 +61,8 @@ export function placeNewBlock(game: Game) {
     throw new Error('Already has a moving block!');
   }
 
-  const lastFixed = game.fixed[game.fixed.length - 1];
-  const height = stackHeight(game.fixed);
+  const lastFixed = game.lastFixed;
+  const height = game.highestStack;
   const lastBlock = !lastFixed ? 4 : lastFixed.shape;
   const shape = (lastBlock + 1) % 5 as 0 | 1 | 2 | 3 | 4;
 
@@ -85,19 +80,20 @@ export function placeNewBlock(game: Game) {
 export function createGame(moves: string): Game {
   return placeNewBlock({
     width: 7,
-    fixed: [],
+    rocks: {},
+    amountFixed: 0,
+    highestStack: -1,
     moves,
   });
 }
 
 export function hasCollision(
   block: Block,
-  others: Block[],
+  rocks: Game['rocks'],
   move: '<' | '>' | 'v',
   width = 7,
 ): boolean {
   const [x1, y1] = block.position;
-  const bh = shapeHeight(block.shape)
   let dx = 0;
   let dy = 0;
 
@@ -113,76 +109,32 @@ export function hasCollision(
     dy = -1;
   }
 
+  // left wall
   if (x1 + dx < 0) {
     return true;
   }
 
+  // right wall
   if (x1 + shapeWidth(block.shape) + dx > width) {
     return true;
   }
 
+  // floor
   if (y1 + dy < 0) {
     return true;
   }
 
-  return others.some((other) => {
-    const [x2, y2] = other.position;
+  if (Object.keys(rocks).length === 0) {
+    return false;
+  }
 
-    if (y2 < y1 - bh) {
-      return false;
-    }
-
-    const a = blockTypes[block.shape].map(([x, y]) => [x + dx + x1, y + dy + y1]);
-    const b = blockTypes[other.shape].map(([x, y]) => [x + x2, y + y2]);
-
-    return b.some((bpos) => a.some((apos) => apos[0] === bpos[0] && apos[1] === bpos[1]));
+  // rocks
+  return blockTypes[block.shape].some(([x, y]) => {
+    return rocks[x + dx + x1] ? rocks[x + dx + x1][y + dy + y1] : false;
   });
 }
 
-function renderBlocks(game: Game): void {
-  const rows = stackHeight(game.fixed);
-  const fills: Record<number, Record<number, '#' | '@' | 'X'>> = {};
-
-  function placeInFill(b: Block, letter: '#' | '@' = '#') {
-    const shape = blockTypes[b.shape];
-    const [dx, dy] = b.position;
-
-    shape.forEach(([x, y]) => {
-      if (!fills[y + dy]) {
-        fills[y + dy] = {};
-      }
-
-      fills[y + dy][x + dx] = fills[y + dy][x + dx] ? 'X' : letter;
-    });
-  }
-
-  if (game.current) {
-    placeInFill(game.current, '@');
-  }
-
-  game.fixed.forEach((b) => {
-    placeInFill(b);
-  });
-
-  const top = game.current ? game.current.position[1] : rows;
-
-  for (let y = top; y >= 0; y--) {
-    process.stdout.write('|');
-    for (let x = 0; x < game.width; x++) {
-      const w = fills[y] ? fills[y][x] || '.' : '.';
-      process.stdout.write(w);
-    }
-    process.stdout.write('|\n');
-  }
-
-  process.stdout.write('+');
-  for (let x = 0; x < game.width; x++) {
-    process.stdout.write('-');
-  }
-  process.stdout.write('+\n\n');
-}
-
-export function advanceStep(game: Game, render = false): Game {
+export function advanceStep(game: Game): Game {
   if (!game.current) {
     throw new Error('Game should have a current block.');
   }
@@ -199,7 +151,7 @@ export function advanceStep(game: Game, render = false): Game {
   }
 
   // make game move
-  if (!hasCollision(game.current, game.fixed, move, game.width)) {
+  if (!hasCollision(game.current, game.rocks, move, game.width)) {
     // current can make move
     const dx = move === '>' ? 1 : -1;
     newGame.current = {
@@ -209,15 +161,30 @@ export function advanceStep(game: Game, render = false): Game {
   }
 
   // move down
-  if (hasCollision(newGame.current, newGame.fixed, 'v', newGame.width)) {
+  if (hasCollision(newGame.current, newGame.rocks, 'v', newGame.width)) {
     // move to fixed
-    newGame.fixed = [...newGame.fixed, newGame.current];
+    newGame.amountFixed += 1;
+
+    // place block in rocks
+    const [bx, by] = newGame.current.position;
+    blockTypes[newGame.current.shape].forEach(([x, y]) => {
+      const ny = by + y;
+      const nx = bx + x;
+
+      if (!newGame.rocks[nx]) {
+        newGame.rocks[nx] = {};
+      }
+
+      newGame.rocks[nx][ny] = true;
+    });
+
+    if (newGame.current.position[1] > newGame.highestStack) {
+      newGame.highestStack = newGame.current.position[1];
+    }
+
+    newGame.lastFixed = newGame.current;
     delete newGame.current;
     newGame = placeNewBlock(newGame);
-
-    if (render) {
-      renderBlocks(newGame);
-    }
   } else {
     // move one down
     newGame.current = {
@@ -231,9 +198,9 @@ export function advanceStep(game: Game, render = false): Game {
 
 export function stackAfterRocks(moves: string, amount = 2022): number {
   let game = createGame(moves);
-  while (game.fixed.length < amount) {
+  while (game.amountFixed < amount) {
     game = advanceStep(game);
   }
 
-  return stackHeight(game.fixed) + 1;
+  return game.highestStack + 1;
 }
