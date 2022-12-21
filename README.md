@@ -72,11 +72,11 @@ Part 1: 1701
 Part 2: 2455
 ⏱ Day 16 time: 990.43ms
 ======== Day 17 ========
-Part 1: 3252
+Part 1: 3219
 Part 2: 1582758620701
-⏱ Day 17 time: 27.969ms
+⏱ Day 17 time: 41.116ms
 ========================
-Execution time: 2656.7ms
+Execution time: 2669.7ms
 ```
 
 ## Install

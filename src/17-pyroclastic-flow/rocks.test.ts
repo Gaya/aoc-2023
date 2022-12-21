@@ -342,6 +342,6 @@ describe('stackAfterRocks', () => {
   it('should match the provide input of the AoC with insane amount', async () => {
     const moves = (await readFile(__dirname + '/input.txt')).toString();
     expect(stackAfterRocks(moves, 1000000000000))
-      .toBe(1602865329485); // 1582758620701
+      .toBe(1582758620701);
   });
 });

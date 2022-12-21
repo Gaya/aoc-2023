@@ -27,7 +27,8 @@ interface Game {
   repTracker: Record<string, { amount: number; height: number }>;
   rocks: Record<number, Record<number, boolean>>;
   firstCycle?: string;
-  lastCycle?: string;
+  firstCycleNode?: { amount: number; height: number };
+  secondCycleNode?: { amount: number; height: number };
   figuredOut?: boolean;
 }
 
@@ -172,29 +173,41 @@ export function advanceStep(game: Game): Game {
     // move to fixed
     newGame.amountFixed += 1;
 
-    // place block in rocks
-    const [bx, by] = newGame.current.position;
-    blockTypes[newGame.current.shape].forEach(([x, y]) => {
-      const ny = by + y;
-      const nx = bx + x;
-
-      if (!newGame.rocks[nx]) {
-        newGame.rocks[nx] = {};
-      }
-
-      newGame.rocks[nx][ny] = true;
-    });
-
-    if (newGame.current.position[1] > newGame.highestStack) {
-      newGame.highestStack = newGame.current.position[1];
+    const index = `${game.moveNumber}:${newGame.current.shape}:${newGame.current.position[0]}`;
+    if (!newGame.firstCycle && newGame.repTracker[`${index}:0`]) {
+      newGame.firstCycle = index;
+      newGame.firstCycleNode = {
+        amount: newGame.amountFixed,
+        height: newGame.highestStack,
+      };
     }
 
-    const index = `${game.moveNumber}:${newGame.current.shape}`;
-    if (newGame.repTracker[index]) {
-      newGame.firstCycle = index;
-      newGame.figuredOut = true;
+    const indexSave = `${game.moveNumber}:${newGame.current.shape}:${newGame.current.position[0]}:${newGame.firstCycle ? 1 : 0}`;
+
+    if (game.firstCycle === index) {
+      newGame.secondCycleNode = {
+        amount: newGame.amountFixed,
+        height: newGame.highestStack,
+      };
     } else {
-      newGame.repTracker[index] = {
+      // place block in rocks
+      const [bx, by] = newGame.current.position;
+      blockTypes[newGame.current.shape].forEach(([x, y]) => {
+        const ny = by + y;
+        const nx = bx + x;
+
+        if (!newGame.rocks[nx]) {
+          newGame.rocks[nx] = {};
+        }
+
+        newGame.rocks[nx][ny] = true;
+      });
+
+      if (newGame.current.position[1] > newGame.highestStack) {
+        newGame.highestStack = newGame.current.position[1];
+      }
+
+      newGame.repTracker[indexSave] = {
         amount: newGame.amountFixed,
         height: newGame.highestStack,
       };
@@ -216,24 +229,23 @@ export function advanceStep(game: Game): Game {
 
 export function stackAfterRocks(moves: string, amount = 2022): number {
   let game = createGame(moves);
-  while (game.amountFixed < amount && !game.figuredOut) {
+  while (game.amountFixed < amount && !game.secondCycleNode) {
     game = advanceStep(game);
   }
 
-  if (!game.figuredOut) {
+  if (!game.secondCycleNode) {
     return game.highestStack + 1;
   }
 
   // calculate score by multiplying round scores
   const heights = Object.values(game.repTracker).sort((a, b) => a.amount - b.amount).map((r) => r.height);
-  const startOfCycle = game.repTracker[game.firstCycle || ''];
+  const startOfCycle = game.repTracker[[game.firstCycle, '0'].join(':')];
   const startIndex = startOfCycle.amount - 1;
   const amountLeft = amount - startIndex;
-  const cycleLength = heights.length - startIndex;
+  const cycleLength = game.secondCycleNode.amount - (game.firstCycleNode?.amount || 0);
   const totalCycles = Math.floor(amountLeft / cycleLength);
   const cycleHeightIndex = amountLeft % cycleLength;
-  const diff = heights[startIndex];
-  const heightPerRound = heights[heights.length - 1] - diff;
+  const heightPerRound = game.secondCycleNode.height - (game.firstCycleNode?.height || 0);
   const startOffset = heights[cycleHeightIndex + (startIndex - 1)];
   const fromCycles =
     // rounds
