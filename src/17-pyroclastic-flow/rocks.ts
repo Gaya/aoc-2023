@@ -21,9 +21,14 @@ interface Game {
   current?: Block;
   lastFixed?: Block;
   moves: string;
+  moveNumber: number;
   highestStack: number;
   amountFixed: number;
+  repTracker: Record<string, { amount: number; previousAmount: number; height: number; previousHeight: number }>;
   rocks: Record<number, Record<number, boolean>>;
+  firstCycle?: string;
+  lastCycle?: string;
+  figuredOut?: boolean;
 }
 
 function shapeWidth(shape: number): number {
@@ -56,7 +61,7 @@ function shapeHeight(shape: number): number {
   }
 }
 
-export function placeNewBlock(game: Game) {
+export function placeNewBlock(game: Game): Game {
   if (game.current) {
     throw new Error('Already has a moving block!');
   }
@@ -82,7 +87,9 @@ export function createGame(moves: string): Game {
     width: 7,
     rocks: {},
     amountFixed: 0,
+    moveNumber: 0,
     highestStack: -1,
+    repTracker: {},
     moves,
   });
 }
@@ -139,11 +146,11 @@ export function advanceStep(game: Game): Game {
     throw new Error('Game should have a current block.');
   }
 
-  const move = game.moves[0] as '<' | '>';
+  const move = game.moves[game.moveNumber] as '<' | '>';
 
-  let newGame = {
+  let newGame: Game = {
     ...game,
-    moves: [game.moves.substring(1), move].join(''),
+    moveNumber: (game.moveNumber + 1) % game.moves.length,
   };
 
   if (!newGame.current) {
@@ -182,6 +189,33 @@ export function advanceStep(game: Game): Game {
       newGame.highestStack = newGame.current.position[1];
     }
 
+    const index = `${game.moveNumber}:${newGame.current.shape}`;
+    if (newGame.repTracker[index]) {
+      // we've seen this!
+      if (!game.firstCycle) {
+        newGame.firstCycle = index;
+      }
+
+      if (game.firstCycle !== index) {
+        const curr = newGame.repTracker[index];
+        newGame.repTracker[index] = {
+          amount: newGame.amountFixed,
+          previousAmount: curr.amount,
+          height: newGame.highestStack,
+          previousHeight: curr.height,
+        };
+      } else {
+        newGame.figuredOut = true;
+      }
+    } else {
+      newGame.repTracker[index] = {
+        amount: newGame.amountFixed,
+        previousAmount: 0,
+        height: newGame.highestStack,
+        previousHeight: 0,
+      };
+    }
+
     newGame.lastFixed = newGame.current;
     delete newGame.current;
     newGame = placeNewBlock(newGame);
@@ -198,9 +232,25 @@ export function advanceStep(game: Game): Game {
 
 export function stackAfterRocks(moves: string, amount = 2022): number {
   let game = createGame(moves);
-  while (game.amountFixed < amount) {
+  while (game.amountFixed < amount && !game.figuredOut) {
     game = advanceStep(game);
   }
 
-  return game.highestStack + 1;
+  if (!game.figuredOut) {
+    return game.highestStack + 1;
+  }
+
+  // calculate score by multiplying round scores
+  const amounts = Object.values(game.repTracker).sort((a, b) => a.amount - b.amount)
+    .map((r) => r.previousHeight !== 0 ? r.previousHeight : r.height);
+  const startOfCycle = game.repTracker[game.firstCycle || ''];
+  const startIndex = startOfCycle.previousAmount - 1;
+  const roundsLeft = amount - startIndex;
+  const diff = amounts[startIndex];
+  const cycleLength = amounts.length - startIndex;
+  const multiplier = Math.floor(roundsLeft / cycleLength);
+  const cycleHeightIndex = roundsLeft % cycleLength;
+  const fromCycles = (multiplier * (amounts[amounts.length - 1] - diff)) + amounts[cycleHeightIndex + (startIndex - 1)];
+
+  return fromCycles + 1;
 }

@@ -6,12 +6,15 @@ describe('placeNewBlock', () => {
       width: 7,
       moves: '',
       amountFixed: 0,
+      moveNumber: 0,
       highestStack: -1,
       rocks: {},
+      repTracker: {},
     })).toMatchObject({
       width: 7,
       amountFixed: 0,
       highestStack: -1,
+      moveNumber: 0,
       current: {
         shape: 0,
         position: [2, 3],
@@ -25,9 +28,11 @@ describe('placeNewBlock', () => {
     expect(placeNewBlock({
       width: 7,
       amountFixed: 1,
+      moveNumber: 0,
       highestStack: 0,
       moves: '',
       lastFixed: { shape: 0, position: [2, 0] },
+      repTracker: {},
       rocks: {
         2: {
           0: true,
@@ -46,6 +51,7 @@ describe('placeNewBlock', () => {
       width: 7,
       amountFixed: 1,
       highestStack: 0,
+      moveNumber: 0,
       current: {
         shape: 1,
         position: [2, 6],
@@ -76,6 +82,7 @@ describe('createGame', () => {
       width: 7,
       amountFixed: 0,
       highestStack: -1,
+      moveNumber: 0,
       current: {
         shape: 0,
         position: [2, 3],
@@ -100,20 +107,16 @@ describe('hasCollision', () => {
   });
 
   it('can handle block collisions', () => {
-    // expect(hasCollision({ shape: 0, position: [0, 3] }, [{ shape: 3, position: [4, 4] }], '>')).toBe(true);
-    // expect(hasCollision({ shape: 0, position: [1, 3] }, [{ shape: 3, position: [6, 4] }], '>')).toBe(false);
-    //
-    // expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 3, position: [2, 4] }], '<')).toBe(true);
-    // expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 3, position: [2, 6] }], '<')).toBe(true);
-    // expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 3, position: [2, 3] }], '<')).toBe(true);
-    // expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 3, position: [2, 2] }], '<')).toBe(false);
-    // expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 3, position: [1, 4] }], '<')).toBe(false);
-    //
-    // expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 1, position: [3, 2] }], 'v')).toBe(true);
-    // expect(hasCollision({ shape: 0, position: [3, 3] }, [{ shape: 1, position: [3, 1] }], 'v')).toBe(false);
-    //
-    // expect(hasCollision({ shape: 2, position: [0, 6] }, [{ shape: 1, position: [2, 3] }], 'v')).toBe(false);
-    // expect(hasCollision({ shape: 2, position: [0, 5] }, [{ shape: 1, position: [2, 3] }], 'v')).toBe(true);
+    expect(hasCollision({ shape: 0, position: [0, 3] }, { 4: { 4: true, 3: true, 2: true, 1: true } }, '>')).toBe(true);
+    expect(hasCollision({ shape: 0, position: [1, 3] }, { 6: { 4: true, 3: true, 2: true, 1: true } }, '>')).toBe(false);
+
+    expect(hasCollision({ shape: 0, position: [3, 3] }, { 2: { 4: true, 3: true, 2: true, 1: true } }, '<')).toBe(true);
+    expect(hasCollision({ shape: 0, position: [3, 3] }, { 2: { 6: true, 5: true, 4: true, 3: true } }, '<')).toBe(true);
+    expect(hasCollision({ shape: 0, position: [3, 3] }, { 2: { 3: true, 2: true, 1: true, 0: true } }, '<')).toBe(true);
+    expect(hasCollision({ shape: 0, position: [3, 3] }, { 2: { 2: true, 1: true, 0: true } }, '<')).toBe(false);
+    expect(hasCollision({ shape: 0, position: [3, 3] }, { 1: { 4: true, 3: true, 2: true, 1: true } }, '<')).toBe(false);
+
+    expect(hasCollision({ shape: 0, position: [3, 3] }, { 4: { 2: true } }, 'v')).toBe(true);
   });
 });
 
@@ -129,10 +132,10 @@ describe('advanceStep', () => {
         shape: 0,
         position: [3, 2],
       },
+      moveNumber: 1,
       amountFixed: 0,
       highestStack: -1,
       rocks: {},
-      moves: '>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>>',
     });
 
     const step2 = advanceStep(step1);
@@ -146,7 +149,7 @@ describe('advanceStep', () => {
       amountFixed: 0,
       highestStack: -1,
       rocks: {},
-      moves: '><<><>><<<>><>>><<<>>><<<><<<>><>><<>>>>',
+      moveNumber: 2,
     });
 
     const step3 = advanceStep(step2);
@@ -160,7 +163,7 @@ describe('advanceStep', () => {
       amountFixed: 0,
       highestStack: -1,
       rocks: {},
-      moves: '<<><>><<<>><>>><<<>>><<<><<<>><>><<>>>>>',
+      moveNumber: 3,
     });
 
     const step4 = advanceStep(step3);
@@ -191,7 +194,7 @@ describe('advanceStep', () => {
           0: true,
         },
       },
-      moves: '<><>><<<>><>>><<<>>><<<><<<>><>><<>>>>><',
+      moveNumber: 4,
     });
 
     const step5 = advanceStep(step4);
@@ -222,7 +225,7 @@ describe('advanceStep', () => {
           0: true,
         },
       },
-      moves: '><>><<<>><>>><<<>>><<<><<<>><>><<>>>>><<',
+      moveNumber: 5,
     });
 
     const step6 = advanceStep(step5);
@@ -253,7 +256,7 @@ describe('advanceStep', () => {
           0: true,
         },
       },
-      moves: '<>><<<>><>>><<<>>><<<><<<>><>><<>>>>><<>',
+      moveNumber: 6,
     });
 
     const step7 = advanceStep(step6);
@@ -284,7 +287,7 @@ describe('advanceStep', () => {
           0: true,
         },
       },
-      moves: '>><<<>><>>><<<>>><<<><<<>><>><<>>>>><<><',
+      moveNumber: 7,
     });
 
     const step8 = advanceStep(step7);
@@ -320,7 +323,7 @@ describe('advanceStep', () => {
           0: true,
         },
       },
-      moves: '><<<>><>>><<<>>><<<><<<>><>><<>>>>><<><>',
+      moveNumber: 8,
     });
   });
 });
@@ -330,7 +333,7 @@ describe('stackAfterRocks', () => {
     expect(stackAfterRocks('>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>', 2022)).toBe(3068);
   });
 
-  it.skip('should match the provide example of the AoC with insane amount', () => {
+  it('should match the provide example of the AoC with insane amount', () => {
     expect(stackAfterRocks('>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>', 1000000000000))
       .toBe(1514285714288);
   });
