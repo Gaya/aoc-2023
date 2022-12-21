@@ -24,7 +24,7 @@ interface Game {
   moveNumber: number;
   highestStack: number;
   amountFixed: number;
-  repTracker: Record<string, { amount: number; previousAmount: number; height: number; previousHeight: number }>;
+  repTracker: Record<string, { amount: number; height: number }>;
   rocks: Record<number, Record<number, boolean>>;
   firstCycle?: string;
   lastCycle?: string;
@@ -191,34 +191,18 @@ export function advanceStep(game: Game): Game {
 
     const index = `${game.moveNumber}:${newGame.current.shape}`;
     if (newGame.repTracker[index]) {
-      // we've seen this!
-      if (!game.firstCycle) {
-        newGame.firstCycle = index;
-      }
-
-      if (game.firstCycle !== index) {
-        const curr = newGame.repTracker[index];
-        newGame.repTracker[index] = {
-          amount: newGame.amountFixed,
-          previousAmount: curr.amount,
-          height: newGame.highestStack,
-          previousHeight: curr.height,
-        };
-      } else {
-        newGame.figuredOut = true;
-      }
+      newGame.firstCycle = index;
+      newGame.figuredOut = true;
     } else {
       newGame.repTracker[index] = {
         amount: newGame.amountFixed,
-        previousAmount: 0,
         height: newGame.highestStack,
-        previousHeight: 0,
       };
-    }
 
-    newGame.lastFixed = newGame.current;
-    delete newGame.current;
-    newGame = placeNewBlock(newGame);
+      newGame.lastFixed = newGame.current;
+      delete newGame.current;
+      newGame = placeNewBlock(newGame);
+    }
   } else {
     // move one down
     newGame.current = {
@@ -241,16 +225,21 @@ export function stackAfterRocks(moves: string, amount = 2022): number {
   }
 
   // calculate score by multiplying round scores
-  const amounts = Object.values(game.repTracker).sort((a, b) => a.amount - b.amount)
-    .map((r) => r.previousHeight !== 0 ? r.previousHeight : r.height);
+  const heights = Object.values(game.repTracker).sort((a, b) => a.amount - b.amount).map((r) => r.height);
   const startOfCycle = game.repTracker[game.firstCycle || ''];
-  const startIndex = startOfCycle.previousAmount - 1;
-  const roundsLeft = amount - startIndex;
-  const diff = amounts[startIndex];
-  const cycleLength = amounts.length - startIndex;
-  const multiplier = Math.floor(roundsLeft / cycleLength);
-  const cycleHeightIndex = roundsLeft % cycleLength;
-  const fromCycles = (multiplier * (amounts[amounts.length - 1] - diff)) + amounts[cycleHeightIndex + (startIndex - 1)];
+  const startIndex = startOfCycle.amount - 1;
+  const amountLeft = amount - startIndex;
+  const cycleLength = heights.length - startIndex;
+  const totalCycles = Math.floor(amountLeft / cycleLength);
+  const cycleHeightIndex = amountLeft % cycleLength;
+  const diff = heights[startIndex];
+  const heightPerRound = heights[heights.length - 1] - diff;
+  const startOffset = heights[cycleHeightIndex + (startIndex - 1)];
+  const fromCycles =
+    // rounds
+    (totalCycles * heightPerRound)
+    // starting offset + left in rounds
+    + startOffset;
 
   return fromCycles + 1;
 }

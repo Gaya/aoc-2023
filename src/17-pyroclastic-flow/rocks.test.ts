@@ -1,4 +1,5 @@
 import { advanceStep, createGame, hasCollision, placeNewBlock, stackAfterRocks } from './rocks';
+import { readFile } from 'fs/promises';
 
 describe('placeNewBlock', () => {
   it('places a standard block for a fresh game', () => {
@@ -336,5 +337,11 @@ describe('stackAfterRocks', () => {
   it('should match the provide example of the AoC with insane amount', () => {
     expect(stackAfterRocks('>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>', 1000000000000))
       .toBe(1514285714288);
+  });
+
+  it('should match the provide input of the AoC with insane amount', async () => {
+    const moves = (await readFile(__dirname + '/input.txt')).toString();
+    expect(stackAfterRocks(moves, 1000000000000))
+      .toBe(1602865329485); // 1582758620701
   });
 });
