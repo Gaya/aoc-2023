@@ -6,6 +6,8 @@ interface Module {
 
 const days = process.argv.slice(2).map((b) => parseInt(b, 10));
 
+const totalStart = +new Date();
+
 readdir(__dirname)
   .then((files) => files.filter((file) => file.match(/^(\d+)+.+$/)))
   .then((files): Promise<[Module, string][]> => {
@@ -43,5 +45,6 @@ readdir(__dirname)
     console.info('========================');
     console.log(`Execution time: ${totalTime.toPrecision(5)}ms`);
     console.log(`⏱ Total time: ${+new Date() - start}ms`);
+    console.log(`⏱ Total time with loading: ${+new Date() - totalStart}ms`);
   })
   .catch(console.error);
