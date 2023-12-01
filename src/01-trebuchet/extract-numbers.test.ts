@@ -1,4 +1,9 @@
-import { extractAllNumbers, extractNumbers } from './extract-numbers';
+import {
+  extractAllNumbers,
+  extractAllNumbersWithNamed,
+  extractNumbers,
+  extractNumbersWithNamed,
+} from './extract-numbers';
 
 describe('extractNumbers', () => {
   it('should read numbers from string and make a number', () => {
@@ -31,5 +36,27 @@ pqr3stu8vwx
 a1b2c3d4e5f
 treb7uchet
 `)).toEqual(142);
+  });
+});
+
+// extract with names
+describe('extractNumbersWithNamed', () => {
+  it('should read numbers from string and make a number', () => {
+    expect(extractNumbersWithNamed('two1nine')).toEqual(29);
+    expect(extractNumbersWithNamed('7pqrstsixteen')).toEqual(76);
+    expect(extractNumbersWithNamed('heyoneighthallo')).toEqual(18);
+    expect(extractNumbersWithNamed('heyseveninehallo')).toEqual(79);
+  });
+});
+
+describe('extractAllNumbersWithNamed', () => {
+  it('should calculate the total with named numbers', () => {
+    expect(extractAllNumbersWithNamed(`two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen`)).toEqual(281);
   });
 });
