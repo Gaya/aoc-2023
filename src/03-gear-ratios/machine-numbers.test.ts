@@ -1,4 +1,4 @@
-import { findNumbers, machineNumberSum } from './machine-numbers';
+import { findNumbers, gearRatio, machineNumberSum } from './machine-numbers';
 
 describe('findNumbers', () => {
   it('should list numbers adjacent to symbols', () => {
@@ -27,5 +27,20 @@ describe('machineNumberSum', () => {
 ......755.
 ...$.*....
 .664.598..`)).toEqual(4361);
+  });
+});
+
+describe('gearRatio', () => {
+  it('calculates the correct gear ratio', () => {
+    expect(gearRatio(`467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..`)).toEqual(467835);
   });
 });
