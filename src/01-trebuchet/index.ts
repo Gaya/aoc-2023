@@ -1,4 +1,4 @@
-// https://adventofcode.com/2022/day/<n>
+// https://adventofcode.com/2023/day/1
 import { extractAllNumbers, extractAllNumbersWithNamed } from './extract-numbers';
 
 export default function solution(input: string) {
