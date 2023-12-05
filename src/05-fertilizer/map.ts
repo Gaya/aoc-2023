@@ -1,10 +1,4 @@
-export function mapLookup(map: string, source: number): number {
-  const ranges = map.match(/\d+/g);
-
-  if (!ranges) {
-    return 0;
-  }
-
+export function mapLookup(ranges: string[], source: number): number {
   const rows = ranges.length / 3;
 
   for (let i = 0; i < rows; i++) {
@@ -22,6 +16,12 @@ export function mapLookup(map: string, source: number): number {
   return source;
 }
 
+function locationByStartAndMap(seed: number, maps: string[][]) {
+  return maps.reduce((start, map) => {
+    return mapLookup(map, start);
+  }, seed);
+}
+
 export function followMaps(input: string): number {
   const results = input.match(/((\d+)\s?)+/gm);
 
@@ -29,15 +29,60 @@ export function followMaps(input: string): number {
     return 0;
   }
 
-  const [seeds, ...maps] = results;
+  const [seeds, ...rawMaps] = results;
+  const maps = rawMaps.map((map) => {
+    const ranges = map.match(/\d+/g);
+
+    if (!ranges) {
+      return [];
+    }
+
+    return ranges;
+  });
 
   const seedNumbers = (seeds.match(/\d+/g) || []).map((seed) => parseInt(seed, 10));
 
   return seedNumbers.reduce((acc, seed) => {
-    const location = maps.reduce((start, map) => {
-      return mapLookup(map, start);
-    }, seed);
-
+    const location = locationByStartAndMap(seed, maps);
     return location < acc ? location : acc;
   }, Infinity);
+}
+
+export function followMapsExtended(input: string): number {
+  const results = input.match(/((\d+)\s?)+/gm);
+
+  if (!results) {
+    return 0;
+  }
+
+  const [seeds, ...rawMaps] = results;
+  const maps = rawMaps.map((map) => {
+    const ranges = map.match(/\d+/g);
+
+    if (!ranges) {
+      return [];
+    }
+
+    return ranges;
+  });
+
+  const seedCombinations = (seeds.match(/\d+/g) || []).map((seed) => parseInt(seed, 10));
+  let location = Infinity;
+
+  for (let i = 0; i < seedCombinations.length / 2; i++) {
+    const offset = i * 2;
+    const start = seedCombinations[offset];
+    const range = seedCombinations[offset + 1];
+
+    for (let j = 0; j < range; j++) {
+      const seed = start + j;
+      const seedLocation = locationByStartAndMap(seed, maps);
+
+      if (seedLocation < location) {
+        location = seedLocation;
+      }
+    }
+  }
+
+  return location;
 }
