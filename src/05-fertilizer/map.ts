@@ -53,7 +53,8 @@ export function followMaps(input: string): number {
   }, Infinity);
 }
 
-function getSeedLocation(location: number, maps: number[][]): number {
+function getSeedLocation(start: number, maps: number[][]): number {
+  let location = start;
   for (const map of maps.slice().reverse()) {
     const rows = map.length / 3;
 
@@ -61,10 +62,10 @@ function getSeedLocation(location: number, maps: number[][]): number {
       const offset = 3 * i;
       const source = map[offset + 1];
       const destination = map[offset];
-      const length = map[offset + 2];
+      const range = map[offset + 2];
 
-      if (destination <= location && destination + length > location) {
-        location = source + location - destination;
+      if (destination <= location && destination + range > location) {
+        location = source + location - destination; // set new location with offset of next map (source - dest)
         break;
       }
     }
@@ -73,7 +74,7 @@ function getSeedLocation(location: number, maps: number[][]): number {
   return location;
 }
 
-export function followMapsExtended(input: string, maxLocation = 1000): number {
+export function followMapsExtended(input: string, maxLocation = Infinity): number {
   const results = input.match(/((\d+)\s?)+/gm);
 
   if (!results) {
