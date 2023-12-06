@@ -44,7 +44,7 @@ readdir(__dirname)
 
     console.info('========================');
     console.log(`Execution time: ${totalTime.toPrecision(5)}ms`);
-    console.log(`⏱ Total time: ${+new Date() - start}ms`);
-    console.log(`⏱ Total time with loading: ${+new Date() - totalStart}ms`);
+    console.log(`⏱ Total time with cleanup: ${+new Date() - start}ms`);
+    console.log(`⏱ Total time with loading and cleanup: ${+new Date() - totalStart}ms`);
   })
   .catch(console.error);
