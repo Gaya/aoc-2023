@@ -1,15 +1,20 @@
-export function mapLookup(ranges: string[], source: number): number {
+export function mapLookup(
+  ranges: string[],
+  source: number,
+): number {
   const rows = ranges.length / 3;
 
   for (let i = 0; i < rows; i++) {
     const offset = 3 * i;
-    const destStart = ranges[offset];
     const sourceStart = parseInt(ranges[offset + 1], 10);
-    const range = parseInt(ranges[offset + 2], 10);
 
-    if (source >= sourceStart && source <= sourceStart + range) {
-      const diff = source - sourceStart;
-      return parseInt(destStart, 10) + diff;
+    if (source >= sourceStart) {
+      const range = parseInt(ranges[offset + 2], 10);
+      if (source <= sourceStart + range) {
+        const diff = source - sourceStart;
+        const destStart = ranges[offset];
+        return parseInt(destStart, 10) + diff;
+      }
     }
   }
 
@@ -48,7 +53,27 @@ export function followMaps(input: string): number {
   }, Infinity);
 }
 
-export function followMapsExtended(input: string): number {
+function getSeedLocation(location: number, maps: number[][]): number {
+  for (const map of maps.slice().reverse()) {
+    const rows = map.length / 3;
+
+    for (let i = 0; i < rows; i++) {
+      const offset = 3 * i;
+      const source = map[offset + 1];
+      const destination = map[offset];
+      const length = map[offset + 2];
+
+      if (destination <= location && destination + length > location) {
+        location = source + location - destination;
+        break;
+      }
+    }
+  }
+
+  return location;
+}
+
+export function followMapsExtended(input: string, maxLocation = 1000): number {
   const results = input.match(/((\d+)\s?)+/gm);
 
   if (!results) {
@@ -63,26 +88,24 @@ export function followMapsExtended(input: string): number {
       return [];
     }
 
-    return ranges;
+    return ranges.map((n) => parseInt(n, 10));
   });
 
   const seedCombinations = (seeds.match(/\d+/g) || []).map((seed) => parseInt(seed, 10));
-  let location = Infinity;
 
-  for (let i = 0; i < seedCombinations.length / 2; i++) {
-    const offset = i * 2;
-    const start = seedCombinations[offset];
-    const range = seedCombinations[offset + 1];
+  for (let i = 0; i < maxLocation; i++) {
+   const seedLocation = getSeedLocation(i, maps);
 
-    for (let j = 0; j < range; j++) {
-      const seed = start + j;
-      const seedLocation = locationByStartAndMap(seed, maps);
+    for (let j = 0; j < seedCombinations.length / 2; j++) {
+      const offset = j * 2;
+      const start = seedCombinations[offset];
+      const range = seedCombinations[offset + 1];
 
-      if (seedLocation < location) {
-        location = seedLocation;
+      if (seedLocation >= start && seedLocation <= start + range - 1) {
+        return i;
       }
     }
   }
 
-  return location;
+  return Infinity;
 }
