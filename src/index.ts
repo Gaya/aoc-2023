@@ -33,8 +33,7 @@ readdir(__dirname)
       const startDay = process.hrtime.bigint();
       const [module, input] = modAndInputs[i];
       const [p1, p2] = module.default(input);
-      const endDay = process.hrtime.bigint();
-      const time = Number(endDay - startDay) / 1e6;
+      const time = Number(process.hrtime.bigint() - startDay) / 1e6;
       totalTime += time;
 
       console.info(`======== Day ${i} ========`);
