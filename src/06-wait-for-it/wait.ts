@@ -2,7 +2,7 @@ export function possibleWins(time: number, distance: number): number {
   let wins = 0;
   for (let i = 0; i < time; i++) {
     if (i * (time - i) > distance) {
-      wins++;
+      return time - (i * 2) + 1;
     }
   }
 
